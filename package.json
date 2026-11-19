@@ -1,10 +1,10 @@
 {
   "name": "atlas-nexus",
-  "version": "2.0.0",
+  "version": "3.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "ng build",
+    "build": "ng build && node scripts/embed-styles.mjs",
     "start": "node server/index.mjs",
     "dev": "ng serve --host 0.0.0.0 --proxy-config proxy.conf.json"
   },

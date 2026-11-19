@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import {google} from 'googleapis';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const app=express();app.disable('x-powered-by');app.use(express.json({limit:'4kb'}));
@@ -31,5 +32,12 @@ const api=google.sheets({version:'v4',auth});
 async function read(id,range){const r=await api.spreadsheets.values.get({spreadsheetId:id,range,valueRenderOption:'FORMATTED_VALUE'});return r.data.values||[]}
 app.get('/healthz',(_req,res)=>res.json({ok:true,service:'atlas-nexus'}));
 app.get('/api/dashboard',async(req,res)=>{if(!valid(req))return res.status(401).json({error:'Autenticazione richiesta'});if(!NEXUS||!MIND)return res.status(503).json({error:'Google Sheets non ancora configurato sul server.'});try{const [daily,mind,hyp,evt]=await Promise.all([read(NEXUS,"'SERIE_365'!A1:N1500"),read(MIND,"'DAILY_EMOTIONS'!A1:L1500"),read(NEXUS,"'IPOTESI_REGISTRO'!A1:P500"),read(NEXUS,"'EVENTI_CHIAVE'!A1:E500")]);const d=days(daily),m=moods(mind),h=hyps(hyp),e=events(evt);res.json({lastRefresh:new Date().toISOString(),sourceDates:{NEXUS:d.at(-1)?.date||'',MIND:m.at(-1)?.date||'',IPOTESI:String(h.length)},days:d,mood:m,hypotheses:h,events:e})}catch(err){console.error('Google Sheets API failed',err?.code||err?.message?.split('\n')[0]);res.status(503).json({error:'Impossibile leggere i fogli privati. Verifica service account e permessi.'})}});
-const dir=path.dirname(fileURLToPath(import.meta.url)),publicDir=path.join(dir,'../dist/atlas-nexus/browser');app.use(express.static(publicDir,{index:false}));app.get(/^\/(?!api\/).*/,(_req,res)=>res.sendFile(path.join(publicDir,'index.html')));
+const dir=path.dirname(fileURLToPath(import.meta.url)),publicDir=path.join(dir,'../dist/atlas-nexus/browser');
+const builtHtml=fs.readFileSync(path.join(publicDir,'index.html'),'utf8');
+const atlasCssMarker='data-atlas-embedded="v3.1"';
+if(!builtHtml.includes(atlasCssMarker)||!builtHtml.includes('.atlas-app.is-locked')||!builtHtml.includes('.desktop-sidebar')){
+  throw Error('ATLAS layout stylesheet missing from production index HTML. Refusing to serve unstyled app.');
+}
+console.log('ATLAS CSS VERIFIED: embedded global layout + responsive stylesheet in HTML');
+app.use(express.static(publicDir,{index:false}));app.get(/^\/(?!api\/).*/,(_req,res)=>res.sendFile(path.join(publicDir,'index.html')));
 app.listen(PORT,'0.0.0.0',()=>console.log('ATLAS NEXUS listening on '+PORT));
