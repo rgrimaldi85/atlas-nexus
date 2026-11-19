@@ -95,11 +95,11 @@ async function suite(label,viewport){
   check(await page.locator('.p-drawer').isVisible(),label+' PrimeNG drawer opens');
   await page.screenshot({path:'test-artifacts/mobile-menu.png',fullPage:true});
   console.log('MOBILE DRAWER LINKS '+JSON.stringify(await page.locator('.drawer-links button').allTextContents()));
-  await page.getByRole('button',{name:'Health',exact:true}).click();
+  await page.locator('.drawer-links button').filter({hasText:'Health'}).first().click({timeout:8000});
  }else{
   check(after.sideDisplay==='flex',label+' desktop sidebar visible as flex');
   check(after.sidebarBg.includes('gradient'),label+' dark gradient sidebar applied');
-  await page.locator('.desktop-sidebar').getByRole('button',{name:'Health'}).click();
+  await page.locator('.desktop-sidebar button').filter({hasText:'Health'}).first().click({timeout:8000});
  }
  await page.locator('.streak-grid .p-card').first().waitFor({timeout:10000});
  check(await page.locator('.streak-grid .p-card').count()===3,label+' Health cards rendered');
