@@ -66,9 +66,10 @@ button,input{font-family:inherit}
   display:flex;align-items:center;gap:14px;padding:12px 15px;margin-bottom:27px;flex-wrap:wrap}
 .toolbar-leading{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:760;white-space:nowrap;color:#4e5972;margin-right:2px}
 .toolbar-leading i{color:#7465eb;font-size:15px}
-.period-control .p-togglebutton{padding:.60rem .78rem!important;border:0!important;border-radius:9px!important;background:#f5f6fb!important;color:#7e8aa0!important;font-size:11px!important;font-weight:650!important;box-shadow:none!important}
-.period-control .p-togglebutton.p-togglebutton-checked{background:#edeafd!important;color:#6257e5!important}
-.period-control{display:flex;gap:2px;background:#f5f6fb;padding:4px;border-radius:12px}
+.period-control-wrap .p-togglebutton{padding:.60rem .78rem!important;border:0!important;border-radius:9px!important;background:#f5f6fb!important;color:#7e8aa0!important;font-size:11px!important;font-weight:650!important;box-shadow:none!important}
+.period-control-wrap .p-togglebutton.p-togglebutton-checked{background:#edeafd!important;color:#6257e5!important}
+.period-control-wrap{display:block;min-width:0;max-width:100%;flex:0 1 auto;overflow:hidden;border-radius:12px;background:#f5f6fb}
+.period-control-wrap p-selectbutton{display:flex;gap:2px;padding:4px;width:max-content;max-width:none}
 .date-input{display:flex;flex-direction:column;gap:3px;margin-left:auto}.date-input span{font-size:9px;letter-spacing:1.2px;color:#a5afbe;text-transform:uppercase;font-weight:800}
 .date-input input{background:#f8f9fc!important;border:1px solid #edf0f6!important;color:#50627a!important;border-radius:10px!important;font-size:11px!important;height:36px;width:143px;padding:6px 8px!important}
 .period-navigation{display:flex;gap:5px}
@@ -254,8 +255,9 @@ button,input{font-family:inherit}
  .title-emblem{width:48px;height:48px;border-radius:15px}.title-emblem i{font-size:21px}
  .date-toolbar{gap:10px;padding:12px}
  .date-toolbar .toolbar-leading{width:100%}
- .period-control{width:100%;justify-content:space-between;overflow-x:auto}
- .period-control .p-togglebutton{flex:1;padding:.5rem .5rem!important;font-size:10px!important}
+ .period-control-wrap{width:100%;flex:1 1 100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+ .period-control-wrap p-selectbutton{width:max-content;min-width:0;max-width:none}
+ .period-control-wrap .p-togglebutton{flex:0 0 auto;padding:.5rem .7rem!important;font-size:10px!important}
  .hero-kpi-grid,.compact-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
  .p-card.hero-kpi .p-card-body{padding:17px}
  .metric-top{margin-bottom:13px}.metric-icon{width:37px;height:37px;font-size:16px}

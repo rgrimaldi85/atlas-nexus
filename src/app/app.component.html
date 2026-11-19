@@ -80,7 +80,7 @@
 
       <div class="date-toolbar">
         <div class="toolbar-leading"><i class="pi pi-calendar"></i><span>Esplora il periodo</span></div>
-        <p-selectButton [options]="periodOptions" [(ngModel)]="period" optionLabel="label" optionValue="value" (onChange)="build()" styleClass="period-control"></p-selectButton>
+        <div class="period-control-wrap"><p-selectButton [options]="periodOptions" [(ngModel)]="period" optionLabel="label" optionValue="value" (onChange)="build()"></p-selectButton></div>
         <label class="date-input"><span>Data</span><input pInputText type="date" [(ngModel)]="anchor" (change)="build()" aria-label="Data di riferimento"/></label>
         <label class="date-input" *ngIf="period==='custom'"><span>Dal</span><input pInputText type="date" [(ngModel)]="from" (change)="build()"/></label>
         <label class="date-input" *ngIf="period==='custom'"><span>Al</span><input pInputText type="date" [(ngModel)]="to" (change)="build()"/></label>
