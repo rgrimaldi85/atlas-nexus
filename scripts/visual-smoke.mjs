@@ -77,6 +77,13 @@ async function suite(label,viewport){
  overflow:document.documentElement.scrollWidth-window.innerWidth};
  });
  console.log(label+' DASHBOARD COMPUTED '+JSON.stringify(after));
+ if(after.overflow>3){
+  const offenders=await page.evaluate(()=>[...document.querySelectorAll('body *')].map(el=>{
+   const r=el.getBoundingClientRect();return {tag:el.tagName,cls:String(el.className).slice(0,130),right:Math.round(r.right),width:Math.round(r.width),left:Math.round(r.left),scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};
+  }).filter(x=>x.right>window.innerWidth+2||x.left< -2).sort((a,b)=>b.right-a.right).slice(0,24));
+  console.error(label+' MOBILE OVERFLOW ELEMENTS '+JSON.stringify(offenders));
+  await page.screenshot({path:'test-artifacts/'+label+'-dashboard-overflow.png',fullPage:true});
+ }
  check(after.grid==='grid',label+' KPI grid layout applied');
  check(after.cards===4,label+' four KPI cards rendered');
  check(after.overflow<=3,label+' no unintended horizontal overflow on dashboard');
