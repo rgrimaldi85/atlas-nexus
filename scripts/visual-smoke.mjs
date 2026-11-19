@@ -59,8 +59,13 @@ async function suite(label,viewport){
  check(pre.overflow<=3,label+' no unintended horizontal overflow at login');
  await page.screenshot({path:'test-artifacts/'+label+'-login.png',fullPage:true});
  await page.locator('#secret input, input#secret').first().fill(CODE);
+ const responses=[];page.on('response',response=>{if(response.url().includes('/api/'))responses.push({url:response.url(),status:response.status()})});
  await page.getByRole('button',{name:/Accedi ad ATLAS/}).click();
- await page.locator('.hero-kpi').first().waitFor({timeout:15000});
+ try{await page.locator('.hero-kpi').first().waitFor({timeout:12000})}catch(e){
+  console.error('LOGIN DIAGNOSTICS',JSON.stringify({responses,errors,body:(await page.locator('body').innerText()).slice(0,1300),cookie:await page.context().cookies('http://127.0.0.1:'+PORT)}));
+  await page.screenshot({path:'test-artifacts/'+label+'-login-failure.png',fullPage:true});
+  throw e;
+ }
  const after=await page.evaluate(()=>{
  const css=s=>getComputedStyle(document.querySelector(s));
  const side=document.querySelector('.desktop-sidebar');
