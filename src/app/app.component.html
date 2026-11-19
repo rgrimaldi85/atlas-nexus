@@ -1,47 +1,216 @@
-<div class="app-shell">
-<aside class="nav-rail">
- <div class="brand"><div class="brand-symbol"><i class="pi pi-chart-line"></i></div><div class="brand-type"><strong>ATLAS</strong><span>NEXUS <b>2.0</b></span></div></div>
- <div class="side-caption">WORKSPACE</div>
- <nav class="side-navigation" aria-label="Navigazione principale">
- <button class="side-link" *ngFor="let item of tabs" [class.active]="tab===item.id" (click)="tab=item.id;build()" [attr.aria-label]="item.name"><i [class]="item.icon"></i><span>{{item.name}}</span><i class="pi pi-angle-right next-icon"></i></button>
- </nav>
- <div class="side-footer"><div class="side-status"><span class="status-dot"></span><div>Google Sheets<small>API privata</small></div></div><p>PERSONAL INTELLIGENCE<br>EUROPE / ZURICH</p></div>
-</aside>
-<main class="workspace">
- <div class="topbar"><div class="breadcrumbs"><span>Workspace</span><i class="pi pi-angle-right"></i><b>{{currentSection}}</b></div>
- <div class="topbar-actions"><span *ngIf="sourceUpdated" class="read-time"><i class="pi pi-clock"></i> Letto {{sourceUpdated}}</span><p-button label="Refresh" icon="pi pi-refresh" severity="secondary" [outlined]="true" size="small" [loading]="loading" (onClick)="reload()"></p-button><p-button icon="pi pi-sign-out" severity="secondary" [text]="true" size="small" ariaLabel="Esci" *ngIf="!locked" (onClick)="logout()"></p-button></div></div>
- <section class="hero"><div class="hero-content"><div class="hero-overline"><span class="hero-dot"></span> PERSONAL INTELLIGENCE SYSTEM</div>
- <h1>{{tab==='overview'?'Your life, in perspective':tab==='body'?'Body & recovery':tab==='mind'?'Mind & wellbeing':tab==='habits'?'Habits & signals':'Hypothesis lab'}}</h1>
- <p>Monitorare i segnali. Comprendere i pattern. Migliorare le decisioni.</p>
- <div class="hero-tags"><span><i class="pi pi-calendar"></i> Europe/Zurich</span><span><i class="pi pi-shield"></i> Accesso privato</span><span *ngIf="data"><i class="pi pi-database"></i> Fonte fino al {{formatDay(dataThrough)}}</span></div>
- </div><div class="hero-art" aria-hidden="true"><i class="pi pi-chart-line"></i></div></section>
- <div class="alert" *ngIf="error&&!locked"><i class="pi pi-exclamation-triangle"></i> {{error}}</div>
- <section class="auth-zone" *ngIf="locked"><div class="auth-card"><div class="auth-icon"><i class="pi pi-lock"></i></div><small>AREA PERSONALE</small><h2>Bentornato su ATLAS</h2><p>Accedi con il codice configurato su Render. I dati rimangono privati e vengono letti da Google Sheets.</p><label>CODICE DI ACCESSO</label><input pInputText type="password" [(ngModel)]="passcode" (keyup.enter)="login()" autocomplete="current-password" placeholder="Inserisci il codice"/><p-button label="Entra nella dashboard" icon="pi pi-arrow-right" iconPos="right" [loading]="loading" (onClick)="login()"></p-button><div class="auth-error" *ngIf="error">{{error}}</div><div class="auth-caption"><i class="pi pi-shield"></i> Sessione protetta · HTTPS</div></div></section>
- <ng-container *ngIf="data&&!locked">
- <section class="toolbar"><div class="toolbar-title"><i class="pi pi-sliders-h"></i> Periodo</div>
- <div class="toolbar-field"><label>INTERVALLO</label><p-select [options]="periodOptions" optionLabel="label" optionValue="value" [(ngModel)]="period" (onChange)="build()" appendTo="body"></p-select></div>
- <div class="toolbar-field"><label>DATA</label><input pInputText type="date" [(ngModel)]="anchor" (change)="build()"/></div>
- <div class="toolbar-field" *ngIf="period==='custom'"><label>DAL</label><input pInputText type="date" [(ngModel)]="from" (change)="build()"/></div><div class="toolbar-field" *ngIf="period==='custom'"><label>AL</label><input pInputText type="date" [(ngModel)]="to" (change)="build()"/></div>
- <div class="toolbar-actions"><p-button icon="pi pi-chevron-left" ariaLabel="Periodo precedente" severity="secondary" [outlined]="true" (onClick)="shift(-1)"></p-button><p-button icon="pi pi-chevron-right" ariaLabel="Periodo successivo" severity="secondary" [outlined]="true" (onClick)="shift(1)"></p-button><p-button label="CSV" icon="pi pi-download" severity="secondary" [outlined]="true" (onClick)="download()"></p-button></div></section>
- <section class="section-heading" *ngIf="tab!=='hypotheses'"><div><div class="eyebrow">ATLAS SNAPSHOT</div><h2>{{tab==='mind'?'Equilibrio emotivo':tab==='body'?'Metriche del recupero':tab==='habits'?'Le tue abitudini':'Il quadro generale'}}</h2><p>Medie reali nel periodo, con copertura delle osservazioni.</p></div><p-tag [value]="validDays+' giorni'" severity="secondary"></p-tag></section>
- <section class="kpi-grid" *ngIf="tab!=='hypotheses'"><article class="kpi-card" *ngFor="let k of kpis.slice(0,tab==='mind'?6:tab==='body'?6:4)"><div class="kpi-head"><span class="kpi-icon" [style.color]="k.color" [style.background]="k.color+'18'"><i [class]="metricIcon(k.name)"></i></span><span>MEDIA</span></div><div class="kpi-label">{{k.name}}</div><div class="kpi-value">{{k.average===null?'—':(k.average|number:'1.0-1')}} <small>{{k.unit}}</small></div><div class="kpi-separator"></div><div class="kpi-coverage"><span>Copertura dati</span><b>{{k.n}} / {{validDays}} gg</b></div><p-progressBar [value]="coverage(k.n)" [showValue]="false" [style]="{'height':'4px'}"></p-progressBar></article></section>
- <div class="dashboard-grid" *ngIf="tab!=='hypotheses'">
-  <section class="card chart-card"><div class="card-header"><div><div class="eyebrow">INTERACTIVE ANALYTICS</div><h2>Signal Explorer</h2><p>Sovrapponi HRV, sonno, recupero e altri indicatori sullo stesso periodo.</p></div><span class="header-pill"><i class="pi pi-chart-line"></i> Analytics</span></div>
-   <div class="chart-controls"><div class="control-field indicators"><label>INDICATORI</label><p-multiSelect [options]="metricOptions" [(ngModel)]="selected" optionLabel="label" optionValue="value" [maxSelectedLabels]="2" selectedItemsLabel="{0} selezionati" display="chip" [filter]="true" appendTo="body" (onChange)="build()" placeholder="Seleziona..."></p-multiSelect></div><div class="control-field"><label>SCALA</label><p-select [options]="modeOptions" optionLabel="label" optionValue="value" [(ngModel)]="mode" appendTo="body" (onChange)="build()"></p-select></div><div class="control-field"><label>BASELINE</label><p-select [options]="baselineOptions" optionLabel="label" optionValue="value" [(ngModel)]="baselineWindow" appendTo="body" (onChange)="build()"></p-select></div></div>
-   <div class="chart-area"><p-chart type="line" [data]="lineData" [options]="lineOptions"></p-chart></div>
-   <div class="chart-info"><i class="pi pi-info-circle"></i>{{selectionDescription}} I valori non registrati restano vuoti.</div>
-   <div class="timeline-section"><div class="timeline-title"><div><h3>Event timeline</h3><p>Esposizioni e attività allineate agli indicatori.</p></div><label class="timeline-toggle"><input type="checkbox" [(ngModel)]="eventsEnabled"/> Mostra</label></div>
-    <div class="legend" *ngIf="eventsEnabled"><label><input type="checkbox" [checked]="selectedEvents.includes('alcohol')" (change)="toggleEvent('alcohol')"/><i class="color-alcohol"></i> Alcol</label><label><input type="checkbox" [checked]="selectedEvents.includes('workout')" (change)="toggleEvent('workout')"/><i class="color-workout"></i> Attività</label><label><input type="checkbox" [checked]="selectedEvents.includes('nicotine')" (change)="toggleEvent('nicotine')"/><i class="color-nicotine"></i> Nicotina</label></div>
-    <div class="timeline-chart" *ngIf="eventsEnabled"><p-chart type="bar" [data]="eventData" [options]="eventOptions"></p-chart></div></div>
-  </section>
-  <div class="aside-cards"><section class="card insight-card"><div class="aside-caption"><span class="aside-icon"><i class="pi pi-sparkles"></i></span> ANALYTICS NOTE</div><h2>Signals in context</h2><p>{{insight}}</p><div class="insight-bottom"><i class="pi pi-info-circle"></i> Correlazioni esplorative, non causali. Il WEEKLY considera ritardi e confondenti.</div></section>
-   <section class="card"><h3><i class="pi pi-bookmark"></i> Le tue viste</h3><p class="aside-description">Salva i grafici e ritrovali con un clic.</p><div class="preset-input"><input pInputText [(ngModel)]="presetName" placeholder="Nome configurazione"/><p-button icon="pi pi-plus" ariaLabel="Salva vista" (onClick)="savePreset()"></p-button></div><div class="preset-tags"><button *ngFor="let s of saved" (click)="loadPreset(s)"><i class="pi pi-bookmark"></i> {{s}}</button><span *ngIf="!saved.length">Nessuna vista salvata</span></div></section>
-   <section class="card sources-card"><h3><i class="pi pi-database"></i> Fonti dati</h3><div class="source-row" *ngFor="let s of data.sourceDates|keyvalue"><span>{{s.key}}</span><b>{{s.value||'non disponibile'}}</b></div><p>Refresh all'apertura · origine Google Sheets.</p></section>
-  </div>
- </div>
- <div class="dashboard-grid bottom-grid" *ngIf="tab==='overview'||tab==='mind'||tab==='habits'"><section class="card"><div class="card-header"><div><div class="eyebrow">PERSONAL WELLBEING</div><h2>Mind timeline</h2><p>Solo rilevazioni autodichiarate dal 19 novembre 2026.</p></div><span class="header-pill">MIND</span></div><div class="mood-row" *ngFor="let m of data.mood.slice(-7)"><b>{{formatDay(m.date)}}</b><div><span><strong>{{m.happiness??'—'}}</strong> Felicità</span><span><strong>{{m.calm??'—'}}</strong> Calma</span><span><strong>{{m.energy??'—'}}</strong> Energia</span><span><strong>{{m.stress??'—'}}</strong> Stress</span></div></div><div class="empty" *ngIf="!data.mood.length">Nessuna rilevazione emotiva disponibile.</div></section>
- <section class="card"><div class="card-header"><div><div class="eyebrow">CHRONOLOGY</div><h2>Eventi significativi</h2><p>Contesto e testimonianze nel periodo selezionato.</p></div></div><div class="event-row" *ngFor="let e of eventList"><span class="event-dot"></span><div><b>{{e.event}}</b><small>{{formatDay(e.date)}} · {{e.category}}</small></div></div><div class="empty" *ngIf="!eventList.length">Nessun evento nel periodo selezionato.</div></section></div>
- <section class="card hypothesis-card" *ngIf="tab==='overview'||tab==='hypotheses'"><div class="card-header"><div><div class="eyebrow">EVIDENCE LAB</div><h2>Hypothesis registry</h2><p>Tracciamento delle evidenze; priorità e archiviazione restano sotto il tuo controllo.</p></div><p-tag [value]="data.hypotheses.length+' ipotesi'" severity="secondary"></p-tag></div><div class="hyp-grid"><article class="hyp-item" *ngFor="let h of data.hypotheses"><div class="hyp-top"><strong>{{h.id}}</strong><span>{{h.state||'In verifica'}}</span></div><h3>{{h.topic}}</h3><p>{{h.text}}</p><div class="hyp-confidence"><i class="pi pi-chart-line"></i> {{h.confidence||'Confidenza non stimata'}}</div><div class="hyp-next"><small>PROSSIMO TEST</small>{{h.next||'Da definire'}}</div></article><div class="empty" *ngIf="!data.hypotheses.length">Nessuna ipotesi registrata.</div></div></section>
- <footer><span><i class="pi pi-shield"></i> ATLAS NEXUS · PERSONAL INTELLIGENCE</span><span>Dati privati · Europe/Zurich · Analisi non diagnostiche</span></footer>
- </ng-container>
-</main></div>
+
+<div class="atlas-app" [class.nav-collapsed]="sideCollapsed" [class.is-locked]="locked">
+  <aside class="desktop-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-glyph"><i class="pi pi-chart-line"></i></div>
+      <div class="brand-words" *ngIf="!sideCollapsed"><strong>ATLAS</strong><span>NEXUS <b>3.0</b></span></div>
+    </div>
+    <div class="nav-caption" *ngIf="!sideCollapsed">IL TUO SPAZIO</div>
+    <nav class="navigation" aria-label="Sezioni ATLAS">
+      <p-button *ngFor="let item of tabs" [label]="sideCollapsed?'':item.name" [icon]="item.icon" [text]="true"
+        [styleClass]="tab===item.id?'atlas-nav-item active':'atlas-nav-item'"
+        [pTooltip]="sideCollapsed?item.name:''" tooltipPosition="right" (onClick)="setTab(item.id)"></p-button>
+    </nav>
+    <div class="sidebar-bottom">
+      <p-button [icon]="sideCollapsed?'pi pi-angle-double-right':'pi pi-angle-double-left'" [label]="sideCollapsed?'':'Comprimi menu'"
+        [text]="true" styleClass="collapse-button" (onClick)="toggleSidebar()"></p-button>
+      <div class="sidebar-profile" *ngIf="!sideCollapsed">
+        <p-avatar icon="pi pi-user" shape="circle" styleClass="profile-avatar"></p-avatar>
+        <div><strong>Spazio personale</strong><span>La tua evoluzione, nel tempo</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <p-drawer [(visible)]="mobileMenu" position="left" [modal]="true" styleClass="atlas-mobile-drawer">
+    <ng-template #header><div class="drawer-brand"><i class="pi pi-chart-line"></i> ATLAS <span>NEXUS</span></div></ng-template>
+    <div class="drawer-links">
+      <p-button *ngFor="let item of tabs" [icon]="item.icon" [label]="item.name" [text]="true"
+        [styleClass]="tab===item.id?'atlas-nav-item active':'atlas-nav-item'" (onClick)="setTab(item.id)"></p-button>
+    </div>
+  </p-drawer>
+
+  <main class="atlas-content" [class.auth-content]="locked">
+    <div class="top-row">
+      <div class="top-left">
+        <p-button icon="pi pi-bars" [text]="true" severity="secondary" styleClass="mobile-trigger" (onClick)="mobileMenu=true" ariaLabel="Apri menu"></p-button>
+        <div class="breadcrumbs"><span>ATLAS</span><i class="pi pi-chevron-right"></i><b>{{currentSection}}</b></div>
+      </div>
+      <div class="top-actions">
+        <p-button icon="pi pi-refresh" [text]="true" [rounded]="true" severity="secondary" pTooltip="Aggiorna i dati" tooltipPosition="bottom" ariaLabel="Aggiorna" [loading]="loading" (onClick)="reload()"></p-button>
+        <p-avatar icon="pi pi-user" shape="circle" styleClass="header-avatar"></p-avatar>
+        <p-button *ngIf="!locked" icon="pi pi-sign-out" [text]="true" [rounded]="true" severity="secondary" ariaLabel="Esci" pTooltip="Esci" (onClick)="logout()"></p-button>
+      </div>
+    </div>
+
+    <ng-container *ngIf="locked">
+      <div class="login-layout">
+        <div class="login-story">
+          <div class="story-icon"><i class="pi pi-sparkles"></i></div>
+          <div class="story-tag">ATLAS · PERSONAL INTELLIGENCE</div>
+          <h1>La tua vita.<br><em>Più chiara.</em></h1>
+          <p>Un unico luogo dove allenamento, salute, abitudini e benessere diventano una prospettiva utile per le tue decisioni.</p>
+          <div class="story-features"><span><i class="pi pi-chart-line"></i> Performance</span><span><i class="pi pi-heart"></i> Salute</span><span><i class="pi pi-sparkles"></i> Benessere</span></div>
+          <div class="story-rings"></div>
+        </div>
+        <p-card styleClass="login-card">
+          <div class="login-lock"><i class="pi pi-lock"></i></div>
+          <span class="login-overline">BENTORNATO</span>
+          <h2>Entra nel tuo spazio.</h2>
+          <p>Il tuo percorso, i tuoi dati, la tua prospettiva.</p>
+          <form (ngSubmit)="login()">
+            <label for="secret">Codice di accesso</label>
+            <p-password inputId="secret" [(ngModel)]="passcode" name="passcode" [toggleMask]="true" [feedback]="false" placeholder="Inserisci il tuo codice" styleClass="access-password" inputStyleClass="access-password-input"></p-password>
+            <p-button type="submit" label="Accedi ad ATLAS" icon="pi pi-arrow-right" iconPos="right" styleClass="login-button" [loading]="loading"></p-button>
+          </form>
+          <p-message *ngIf="error" severity="error" [text]="error" styleClass="login-error"></p-message>
+          <div class="login-privacy"><i class="pi pi-shield"></i> Accesso privato e protetto</div>
+        </p-card>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="!locked&&data">
+      <section class="page-heading">
+        <div>
+          <span class="overline">{{tab==='overview'?'LA TUA VISIONE D’INSIEME':tab==='health'?'HEALTH INTELLIGENCE':tab==='body'?'BODY & PERFORMANCE':tab==='mind'?'MENTAL WELLBEING':tab==='habits'?'LIFESTYLE PATTERNS':'ATLAS · EVIDENCE LAB'}}</span>
+          <h1>{{tab==='overview'?'Il tuo equilibrio, ogni giorno.':tab==='health'?'La salute nelle tue abitudini.':tab==='body'?'Progressi che contano.':tab==='mind'?'La mente fa parte del percorso.':tab==='habits'?'Le piccole scelte, viste da vicino.':'Le ipotesi, alla prova dei dati.'}}</h1>
+          <p>{{tab==='overview'?'Esplora le connessioni tra come vivi, come ti senti e come recuperi.':tab==='health'?'Nicotina, alcol, allenamenti e recupero: i cambiamenti misurati nel tempo.':tab==='body'?'Peso, forza, movimento, nutrizione e recupero nello stesso contesto.':tab==='mind'?'Stress, energia, serenità e motivazione nel loro contesto.':tab==='habits'?'Una lettura coerente di abitudini, esposizioni e attività.':'Distinguiamo segnali interessanti da coincidenze e supposizioni.'}}</p>
+        </div>
+        <div class="title-emblem"><i [class]="tab==='health'?'pi pi-heart':tab==='mind'?'pi pi-sun':tab==='hypotheses'?'pi pi-lightbulb':'pi pi-chart-line'"></i></div>
+      </section>
+
+      <div class="date-toolbar">
+        <div class="toolbar-leading"><i class="pi pi-calendar"></i><span>Esplora il periodo</span></div>
+        <p-selectButton [options]="periodOptions" [(ngModel)]="period" optionLabel="label" optionValue="value" (onChange)="build()" styleClass="period-control"></p-selectButton>
+        <label class="date-input"><span>Data</span><input pInputText type="date" [(ngModel)]="anchor" (change)="build()" aria-label="Data di riferimento"/></label>
+        <label class="date-input" *ngIf="period==='custom'"><span>Dal</span><input pInputText type="date" [(ngModel)]="from" (change)="build()"/></label>
+        <label class="date-input" *ngIf="period==='custom'"><span>Al</span><input pInputText type="date" [(ngModel)]="to" (change)="build()"/></label>
+        <div class="period-navigation">
+          <p-button icon="pi pi-chevron-left" [outlined]="true" severity="secondary" ariaLabel="Periodo precedente" (onClick)="shift(-1)"></p-button>
+          <p-button icon="pi pi-chevron-right" [outlined]="true" severity="secondary" ariaLabel="Periodo successivo" (onClick)="shift(1)"></p-button>
+        </div>
+      </div>
+
+      <p-message *ngIf="error" severity="warn" [text]="error" styleClass="read-error"></p-message>
+
+      <ng-container *ngIf="tab==='overview'">
+        <div class="section-head"><div><span class="overline">ATLAS SNAPSHOT</span><h2>In evidenza</h2><p>Le metriche più significative, senza rumore.</p></div><p-tag icon="pi pi-calendar" [value]="'Dati fino al '+cutoffLabel" severity="secondary" [rounded]="true"></p-tag></div>
+        <div class="hero-kpi-grid">
+          <p-card styleClass="hero-kpi nicotine-card">
+            <div class="metric-top"><span class="metric-icon aqua"><i class="pi pi-shield"></i></span><p-tag severity="success" value="ABITUDINI" [rounded]="true"></p-tag></div>
+            <span class="metric-name">Giorni senza nicotina</span><div class="metric-value">{{smokeStreak===null?'—':smokeStreak}} <small>giorni</small></div>
+            <div class="metric-foot"><i class="pi pi-check-circle"></i><span>{{smokeStreak===null?'Sequenza non verificabile':'Registrati consecutivamente fino al '+cutoffLabel}}</span></div>
+          </p-card>
+          <p-card styleClass="hero-kpi">
+            <div class="metric-top"><span class="metric-icon lavender"><i class="pi pi-moon"></i></span><span class="metric-sparkline">RECUPERO</span></div>
+            <span class="metric-name">Sonno medio</span><div class="metric-value">{{avg('sleep')===null?'—':(avg('sleep')|number:'1.1-1')}} <small>ore</small></div><div class="metric-foot"><i class="pi pi-clock"></i><span>{{metricN('sleep')}} giornate valide nel periodo</span></div>
+          </p-card>
+          <p-card styleClass="hero-kpi">
+            <div class="metric-top"><span class="metric-icon peach"><i class="pi pi-heart"></i></span><span class="metric-sparkline">RECUPERO</span></div>
+            <span class="metric-name">HRV media</span><div class="metric-value">{{avg('hrv')===null?'—':(avg('hrv')|number:'1.0-0')}} <small>ms</small></div><div class="metric-foot"><i class="pi pi-wave-pulse"></i><span>{{metricN('hrv')}} letture disponibili</span></div>
+          </p-card>
+          <p-card styleClass="hero-kpi">
+            <div class="metric-top"><span class="metric-icon blue"><i class="pi pi-bolt"></i></span><span class="metric-sparkline">ATTIVITÀ</span></div>
+            <span class="metric-name">Sedute forza</span><div class="metric-value">{{workoutsPeriod}} <small>confermate</small></div><div class="metric-foot"><i class="pi pi-check-circle"></i><span>ATLAS FATTO · nel periodo selezionato</span></div>
+          </p-card>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="tab==='health'">
+        <div class="section-head"><div><span class="overline">HEALTH TRACKER</span><h2>Il cambiamento, giorno dopo giorno.</h2><p>Sequenze reali e registrazioni confermate, non supposizioni.</p></div><p-tag [value]="'Ultimo dato '+cutoffLabel" severity="secondary" [rounded]="true"></p-tag></div>
+        <div class="streak-grid">
+          <p-card styleClass="streak-card streak-nicotine"><div class="streak-head"><span class="streak-icon"><i class="pi pi-shield"></i></span><p-tag severity="success" value="NICOTINA" [rounded]="true"></p-tag></div><div class="streak-number">{{smokeStreak===null?'—':smokeStreak}}<span>giorni</span></div><strong>Sequenza senza nicotina</strong><p>Dal {{smokeSince}} · fino all’ultimo giorno registrato</p><p-progressBar [value]="nicotineRecordedDays?100*noNicotineDays/nicotineRecordedDays:0" [showValue]="false" [style]="{'height':'6px'}"></p-progressBar><div class="streak-bottom">{{noNicotineDays}} giorni senza nicotina / {{nicotineRecordedDays}} registrati (ultimi 30)</div></p-card>
+          <p-card styleClass="streak-card streak-alcohol"><div class="streak-head"><span class="streak-icon"><i class="pi pi-calendar"></i></span><p-tag severity="warn" value="ALCOL" [rounded]="true"></p-tag></div><div class="streak-number">{{alcoholFreeStreak===null?'—':alcoholFreeStreak}}<span>giorni</span></div><strong>Sequenza senza alcol</strong><p>Solo giorni con astinenza esplicitamente registrata</p><p-progressBar [value]="alcoholRecordedDays?100*alcoholFreeDays/alcoholRecordedDays:0" [showValue]="false" [style]="{'height':'6px'}"></p-progressBar><div class="streak-bottom">{{alcoholFreeDays}} giorni senza alcol / {{alcoholRecordedDays}} verificati (ultimi 30)</div></p-card>
+          <p-card styleClass="streak-card streak-training"><div class="streak-head"><span class="streak-icon"><i class="pi pi-bolt"></i></span><p-tag severity="info" value="FORZA" [rounded]="true"></p-tag></div><div class="streak-number">{{workoutsWeek}}<span>sedute</span></div><strong>Forza · ultimi 7 giorni</strong><p>Solo sedute completate e confermate in ATLAS</p><p-progressBar [value]="Math.min(100,workoutsWeek/5*100)" [showValue]="false" [style]="{'height':'6px'}"></p-progressBar><div class="streak-bottom">{{confirmedWorkouts}} sedute confermate negli ultimi 30 giorni</div></p-card>
+        </div>
+
+        <p-card styleClass="health-diary">
+          <div class="card-heading"><div><span class="overline">14-DAY ACTIVITY MAP</span><h2>Diario delle abitudini</h2><p>Ogni casella rappresenta il dato registrato per quella giornata.</p></div><p-tag value="Nessuna stima dei vuoti" severity="secondary"></p-tag></div>
+          <div class="habit-grid-head"><span>GIORNO</span><span>NICOTINA</span><span>ALCOL</span><span>FORZA ATLAS</span><span>SONNO</span></div>
+          <div class="habit-grid-row" *ngFor="let d of recentDaily">
+            <strong>{{dayShort(d.date)}}</strong>
+            <p-tag [value]="d.nicotine===0?'Assente':d.nicotine===1?'Presente':'N/D'" [severity]="d.nicotine===0?'success':d.nicotine===1?'danger':'secondary'"></p-tag>
+            <p-tag [value]="d.alcohol===0?'Assente':d.alcohol===1?'Presente':'N/D'" [severity]="d.alcohol===0?'success':d.alcohol===1?'warn':'secondary'"></p-tag>
+            <p-tag [value]="d.atlasDone===1?'Confermata':d.atlasDone===0?'Non confermata':'N/D'" [severity]="d.atlasDone===1?'info':'secondary'"></p-tag>
+            <span class="habit-sleep">{{d.sleep===null?'—':(d.sleep|number:'1.1-1')+' h'}}</span>
+          </div>
+        </p-card>
+      </ng-container>
+
+      <ng-container *ngIf="tab==='body'||tab==='mind'||tab==='habits'">
+        <div class="section-head"><div><span class="overline">MEASUREMENT & CONTEXT</span><h2>{{tab==='body'?'Composizione, movimento, performance':tab==='mind'?'Come ti senti, nel tempo':'Il contesto delle tue scelte'}}</h2><p>Osservazioni nel periodo selezionato e copertura reale.</p></div></div>
+        <div class="compact-kpis">
+          <p-card styleClass="small-metric" *ngFor="let x of kpis.slice(0,4)">
+            <div class="small-metric-top"><span [style.background]="x.color+'19'" [style.color]="x.color"><i [class]="metricIcon(x.name)"></i></span><p-tag severity="secondary" [value]="x.n+'/'+validDays+' gg'"></p-tag></div>
+            <label>{{x.name}}</label><div class="small-metric-value">{{x.average===null?'—':(x.average|number:'1.1-1')}} <small>{{x.unit}}</small></div>
+            <p-progressBar [value]="coverage(x.n)" [showValue]="false" [style]="{'height':'5px'}"></p-progressBar>
+          </p-card>
+        </div>
+      </ng-container>
+
+      <div class="analytics-layout" *ngIf="tab!=='hypotheses'">
+        <p-card styleClass="analytics-card">
+          <div class="card-heading"><div><span class="overline">SIGNAL EXPLORER</span><h2>Esplora le connessioni</h2><p>Seleziona gli indicatori, confrontali e cerca segnali che meritano un’analisi.</p></div><p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="secondary" pTooltip="Esporta CSV" tooltipPosition="left" (onClick)="download()"></p-button></div>
+          <div class="graph-toolbar">
+            <div class="graph-field large-field"><label>INDICATORI</label><p-multiSelect [options]="metricOptions" optionLabel="label" optionValue="value" [(ngModel)]="selected" (onChange)="build()" display="chip" [maxSelectedLabels]="2" [selectedItemsLabel]="'{0} indicatori'" [filter]="true" appendTo="body" placeholder="Seleziona metriche"></p-multiSelect></div>
+            <div class="graph-field"><label>SCALA</label><p-select [options]="modeOptions" optionLabel="label" optionValue="value" [(ngModel)]="mode" (onChange)="build()" appendTo="body"></p-select></div>
+            <div class="graph-field"><label>RIFERIMENTO</label><p-select [options]="baselineOptions" optionLabel="label" optionValue="value" [(ngModel)]="baselineWindow" (onChange)="build()" appendTo="body"></p-select></div>
+          </div>
+          <div class="main-chart"><p-chart type="line" [data]="lineData" [options]="lineOptions"></p-chart></div>
+          <div class="plot-caption"><i class="pi pi-info-circle"></i> {{selectionDescription}}</div>
+          <p-divider></p-divider>
+          <div class="timeline-toolbar"><div><h3>Abitudini sulla linea temporale</h3><p>Alcol, nicotina e attività: lo stesso asse del grafico.</p></div><div class="checkbox-wrap"><p-checkbox inputId="timeline" [(ngModel)]="eventsEnabled" [binary]="true"></p-checkbox><label for="timeline">Mostra</label></div></div>
+          <div *ngIf="eventsEnabled">
+            <div class="event-picks">
+              <span><p-checkbox inputId="ev-a" [binary]="true" [ngModel]="selectedEvents.includes('alcohol')" (onChange)="toggleEvent('alcohol')"></p-checkbox><label for="ev-a"><i class="color-alcohol"></i> Alcol</label></span>
+              <span><p-checkbox inputId="ev-w" [binary]="true" [ngModel]="selectedEvents.includes('workout')" (onChange)="toggleEvent('workout')"></p-checkbox><label for="ev-w"><i class="color-workout"></i> Attività</label></span>
+              <span><p-checkbox inputId="ev-n" [binary]="true" [ngModel]="selectedEvents.includes('nicotine')" (onChange)="toggleEvent('nicotine')"></p-checkbox><label for="ev-n"><i class="color-nicotine"></i> Nicotina</label></span>
+            </div>
+            <div class="habit-chart"><p-chart type="bar" [data]="eventData" [options]="eventOptions"></p-chart></div>
+          </div>
+        </p-card>
+
+        <div class="context-stack">
+          <p-card styleClass="insight-card">
+            <div class="insight-overline"><i class="pi pi-sparkles"></i> IL PUNTO SUI DATI</div>
+            <h3>Un confronto da esplorare</h3><p>{{insight}}</p><div class="insight-note"><i class="pi pi-info-circle"></i> Correlazione non significa causa. Il WEEKLY approfondisce solo evidenze sufficienti.</div>
+          </p-card>
+          <p-card styleClass="focus-card">
+            <div class="focus-overline"><i class="pi pi-bookmark"></i> LE TUE VISTE</div>
+            <h3>Riparti da ciò che ti interessa.</h3><div class="preset-editor"><input pInputText [(ngModel)]="presetName" placeholder="Nome del confronto" aria-label="Nome del confronto" /><p-button icon="pi pi-plus" ariaLabel="Salva vista" (onClick)="savePreset()"></p-button></div>
+            <div class="saved-views"><p-button *ngFor="let s of saved" [label]="s" icon="pi pi-bookmark" [outlined]="true" severity="secondary" size="small" (onClick)="loadPreset(s)"></p-button><p *ngIf="!saved.length">Salva un insieme di indicatori per ritrovarlo facilmente.</p></div>
+          </p-card>
+          <p-card styleClass="context-card" *ngIf="tab==='overview'||tab==='health'||tab==='habits'">
+            <div class="focus-overline"><i class="pi pi-heart"></i> HEALTH · ULTIMI 30 GIORNI</div>
+            <div class="context-line"><div><i class="pi pi-shield"></i><span>Senza nicotina</span></div><strong>{{noNicotineDays}} <small>/ {{nicotineRecordedDays}}</small></strong></div>
+            <div class="context-line"><div><i class="pi pi-calendar"></i><span>Senza alcol</span></div><strong>{{alcoholFreeDays}} <small>/ {{alcoholRecordedDays}}</small></strong></div>
+            <div class="context-line"><div><i class="pi pi-bolt"></i><span>Forza confermata</span></div><strong>{{confirmedWorkouts}} <small>sedute</small></strong></div>
+            <p-button label="Apri Health" icon="pi pi-arrow-right" iconPos="right" [text]="true" size="small" (onClick)="setTab('health')"></p-button>
+          </p-card>
+        </div>
+      </div>
+
+      <div class="bottom-layout" *ngIf="tab==='overview'||tab==='mind'||tab==='health'">
+        <p-card styleClass="journal-card">
+          <div class="card-heading"><div><span class="overline">ATLAS MIND</span><h2>Emozioni e benessere</h2><p>Solo punteggi autodichiarati, senza ricostruzioni arbitrarie.</p></div><p-button icon="pi pi-arrow-up-right" [text]="true" [rounded]="true" severity="secondary" (onClick)="setTab('mind')" ariaLabel="Apri Mind"></p-button></div>
+          <div class="mood-line" *ngFor="let m of moodRecent"><span>{{formatDay(m.date)}}</span><div><p-tag [value]="'Felicità '+(m.happiness??'—')" severity="info"></p-tag><p-tag [value]="'Calma '+(m.calm??'—')" severity="secondary"></p-tag><p-tag [value]="'Stress '+(m.stress??'—')" severity="warn"></p-tag></div></div>
+          <p-message *ngIf="!moodRecent.length" severity="secondary" text="Non ci sono ancora rilevazioni emotive per il periodo disponibile."></p-message>
+        </p-card>
+        <p-card styleClass="event-card">
+          <div class="card-heading"><div><span class="overline">EVENTS & CONTEXT</span><h2>Cosa è successo</h2><p>Eventi e cambiamenti utili a interpretare i grafici.</p></div></div>
+          <div class="event-feed"><div class="feed-row" *ngFor="let e of eventList.slice(-5).reverse()"><div class="feed-marker"><i class="pi pi-circle-fill"></i></div><div><strong>{{e.event}}</strong><span>{{formatDay(e.date)}} · {{e.category}}</span></div></div></div>
+          <p-message *ngIf="!eventList.length" severity="secondary" text="Nessun evento disponibile in questo periodo."></p-message>
+        </p-card>
+      </div>
+
+      <p-card styleClass="hypothesis-card" *ngIf="tab==='overview'||tab==='hypotheses'">
+        <div class="card-heading"><div><span class="overline">EVIDENCE LAB</span><h2>Ipotesi da mettere alla prova</h2><p>Le osservazioni si aggiornano; le priorità rimangono una tua decisione.</p></div><p-tag [value]="data.hypotheses.length+' ipotesi'" severity="secondary"></p-tag></div>
+        <div class="hypothesis-grid">
+          <p-card styleClass="hypothesis-item" *ngFor="let h of data.hypotheses">
+            <div class="hypothesis-top"><span>{{h.id}}</span><p-tag severity="secondary" [value]="h.state||'In verifica'"></p-tag></div><h3>{{h.topic}}</h3><p>{{h.text}}</p><div class="hypothesis-next"><span>DA VERIFICARE</span>{{h.next||'Non definito'}}</div>
+          </p-card>
+        </div>
+      </p-card>
+      <div class="footer-note"><i class="pi pi-info-circle"></i> Dati disponibili fino al {{cutoffLabel}}. Le assenze di registrazione non sono interpretate come assenze di comportamento. Le analisi non sono diagnosi.</div>
+    </ng-container>
+  </main>
+</div>
