@@ -94,7 +94,37 @@ async function suite(label,viewport){
  check(errors.length===0,label+' no JavaScript page errors: '+JSON.stringify(errors));
  await page.close();
 }
+
+async function liveLogin(label,viewport){
+ const page=await browser.newPage({viewport,deviceScaleFactor:1});
+ await page.goto('https://atlas-nexus.onrender.com/',{waitUntil:'domcontentloaded',timeout:100000});
+ await page.locator('.login-card h2').waitFor({timeout:35000});
+ const values=await page.evaluate(()=>{
+  const style=s=>getComputedStyle(document.querySelector(s));
+  return {
+   inline:!!document.querySelector('style[data-atlas-embedded="v3.1"]'),
+   sidebar:style('.desktop-sidebar').display,
+   grid:style('.login-layout').display,
+   gradient:style('.login-story').backgroundImage,
+   italic:style('.login-story h1 em').fontStyle,
+   cardRadius:parseFloat(style('.login-card').borderTopLeftRadius),
+   overflow:document.documentElement.scrollWidth-window.innerWidth
+  };
+ });
+ console.log('RENDER LIVE '+label+' CSS COMPUTED '+JSON.stringify(values));
+ check(values.inline,'LIVE '+label+' embedded styles present');
+ check(values.sidebar==='none','LIVE '+label+' sidebar hidden during login');
+ check(values.grid==='grid','LIVE '+label+' login grid');
+ check(values.gradient.includes('gradient'),'LIVE '+label+' design gradient applied');
+ check(values.italic==='normal','LIVE '+label+' custom heading style applied');
+ check(values.cardRadius>=18,'LIVE '+label+' PrimeNG card radius');
+ check(values.overflow<=3,'LIVE '+label+' no horizontal overflow');
+ await page.screenshot({path:'test-artifacts/live-'+label+'-login.png',fullPage:true});
+ await page.close();
+}
 try{
+ await liveLogin('mobile',{width:390,height:844});
+ await liveLogin('desktop',{width:1440,height:900});
  await suite('mobile',{width:390,height:844});
  await suite('desktop',{width:1440,height:900});
  console.log('ATLAS BROWSER VISUAL SMOKE PASS: mobile and desktop computed layout and screenshots');
