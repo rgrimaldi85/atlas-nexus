@@ -29,7 +29,7 @@ app.delete('/api/session',(_req,res)=>res.clearCookie('atlas_test').json({ok:tru
 app.use(express.static('dist/atlas-nexus/browser'));
 app.get(/.*/,(req,res)=>res.sendFile('index.html',{root:'dist/atlas-nexus/browser'}));
 const server=await new Promise(resolve=>{const s=app.listen(PORT,'127.0.0.1',()=>resolve(s))});
-const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+const browser=await chromium.launch({headless:true,...(process.env.CHROME_BIN?{executablePath:process.env.CHROME_BIN}:{}),args:['--no-sandbox','--disable-dev-shm-usage']});
 fs.mkdirSync('test-artifacts',{recursive:true});
 const failures=[];
 function check(value,message){assert.ok(value,message);console.log('PASS: '+message)}

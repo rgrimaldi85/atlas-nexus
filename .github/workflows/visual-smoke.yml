@@ -18,11 +18,13 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build production Angular with inlined CSS
         run: npm run build
-      - name: Install Playwright and Chromium
+      - name: Install Playwright using Chrome already on Ubuntu runner
         run: |
           npm install --no-save playwright@1.58.2
-          npx playwright install --with-deps chromium
+          /usr/bin/google-chrome --version
       - name: Run iPhone and desktop Chromium visual checks
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/visual-smoke.mjs
       - name: Save screenshots
         if: always()
