@@ -94,7 +94,8 @@ async function suite(label,viewport){
   await page.locator('.p-drawer').waitFor({timeout:5000});
   check(await page.locator('.p-drawer').isVisible(),label+' PrimeNG drawer opens');
   await page.screenshot({path:'test-artifacts/mobile-menu.png',fullPage:true});
-  await page.locator('.p-drawer').getByRole('button',{name:'Health'}).click();
+  console.log('MOBILE DRAWER LINKS '+JSON.stringify(await page.locator('.drawer-links button').allTextContents()));
+  await page.getByRole('button',{name:'Health',exact:true}).click();
  }else{
   check(after.sideDisplay==='flex',label+' desktop sidebar visible as flex');
   check(after.sidebarBg.includes('gradient'),label+' dark gradient sidebar applied');
