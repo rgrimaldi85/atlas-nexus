@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -47,7 +47,7 @@ function mean(a:(number|null)[]):number|null {const b=a.filter((x):x is number=>
 function pearson(a:(number|null)[],b:(number|null)[]){const p=a.map((v,i)=>[v,b[i]]).filter((v):v is number[]=>v[0]!==null&&v[1]!==null);if(p.length<5)return {n:p.length,r:null};const x=mean(p.map(t=>t[0]))!,y=mean(p.map(t=>t[1]))!;const xx=p.reduce((s,t)=>s+(t[0]-x)**2,0),yy=p.reduce((s,t)=>s+(t[1]-y)**2,0),xy=p.reduce((s,t)=>s+(t[0]-x)*(t[1]-y),0);return {n:p.length,r:xx*yy?xy/Math.sqrt(xx*yy):null}}
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule,ChartModule,ButtonModule,SelectModule,MultiSelectModule,TagModule,InputTextModule,ProgressBarModule,CardModule,DrawerModule,CheckboxModule,DividerModule,TooltipModule,PasswordModule,SelectButtonModule,MessageModule,AvatarModule],templateUrl:'./app.component.html'})
 export class AppComponent implements OnInit {
- private http=inject(HttpClient);data:Bundle|null=null;loading=false;error='';locked=true;passcode='';tab='overview';period:Period='month';mode='native';baselineWindow=30;
+ private http=inject(HttpClient);private cdr=inject(ChangeDetectorRef);data:Bundle|null=null;loading=false;error='';locked=true;passcode='';tab='overview';period:Period='month';mode='native';baselineWindow=30;
  anchor=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Zurich'});from=dateAdd(this.anchor,-29);to=this.anchor;
  sideCollapsed=false; mobileMenu=false;
 readonly metrics=METRICS; readonly tabs=[
@@ -110,9 +110,9 @@ get selectionDescription(){return this.mode==='native'&&this.selected.length>2?'
  kpis:{name:string;average:number|null;unit:string;color:string;n:number}[]=[];validDays=0;insight='';eventList:Event[]=[];
  get periodLabel(){return ({day:'Giorno',week:'Settimana',month:'Mese',year:'Anno',custom:'Personalizzato'})[this.period]}
  ngOnInit(){try{this.saved=Object.keys(JSON.parse(localStorage.getItem('atlas-nexus-presets')||'{}'));this.sideCollapsed=localStorage.getItem('atlas-sidebar-collapsed')==='1'}catch{};void this.reload()}
- async reload(){this.loading=true;this.error='';try{this.data=await firstValueFrom(this.http.get<Bundle>('/api/dashboard',{withCredentials:true}));this.locked=false;this.sourceUpdated=new Date().toLocaleString('it-CH');if(this.data.days.length)this.anchor=this.data.days[this.data.days.length-1].date;this.build()}catch(e:any){this.locked=e.status===401;this.error=this.locked?'Inserisci il codice di accesso per visualizzare la dashboard.':(e?.error?.error||'Non è stato possibile leggere Google Sheets.')}finally{this.loading=false}}
- async login(){this.error='';try{await firstValueFrom(this.http.post('/api/session',{passcode:this.passcode},{withCredentials:true}));this.passcode='';await this.reload()}catch{this.error='Codice di accesso non valido o servizio non disponibile.'}}
- async logout(){await firstValueFrom(this.http.delete('/api/session',{withCredentials:true}));this.data=null;this.locked=true}
+ async reload(){this.loading=true;this.error='';this.cdr.markForCheck();try{this.data=await firstValueFrom(this.http.get<Bundle>('/api/dashboard',{withCredentials:true}));this.locked=false;this.sourceUpdated=new Date().toLocaleString('it-CH');if(this.data.days.length)this.anchor=this.data.days[this.data.days.length-1].date;this.build()}catch(e:any){this.locked=e.status===401;this.error=this.locked?'Inserisci il codice di accesso per visualizzare la dashboard.':(e?.error?.error||'Non è stato possibile leggere Google Sheets.')}finally{this.loading=false;this.cdr.markForCheck()}}
+ async login(){this.error='';this.cdr.markForCheck();try{await firstValueFrom(this.http.post('/api/session',{passcode:this.passcode},{withCredentials:true}));this.passcode='';await this.reload()}catch{this.error='Codice di accesso non valido o servizio non disponibile.';this.cdr.markForCheck()}}
+ async logout(){try{await firstValueFrom(this.http.delete('/api/session',{withCredentials:true}));this.data=null;this.locked=true}finally{this.cdr.markForCheck()}}
  dateBounds(){let start=this.from,end=this.to;if(this.period==='day')start=end=this.anchor;if(this.period==='week'){const d=new Date(this.anchor+'T12:00:00Z').getUTCDay();start=dateAdd(this.anchor,-d);end=dateAdd(start,6)}if(this.period==='month'){start=this.anchor.slice(0,7)+'-01';end=new Date(Date.UTC(Number(this.anchor.slice(0,4)),Number(this.anchor.slice(5,7)),0)).toISOString().slice(0,10)}if(this.period==='year'){start=this.anchor.slice(0,4)+'-01-01';end=this.anchor.slice(0,4)+'-12-31'}return [start,end]}
  shift(n:number){const steps=this.period==='day'?1:this.period==='week'?7:this.period==='month'?30:this.period==='year'?365:7;this.anchor=dateAdd(this.anchor,steps*n);this.build()}
  value(date:string,m:Metric):number|null{const source=m.type==='daily'?this.data?.days:this.data?.mood;const v=(source?.find((a:any)=>a.date===date) as any)?.[m.key];return typeof v==='number'&&Number.isFinite(v)&&!(m.key==='sleep'&&(date==='2026-11-09'||date==='2026-05-08'))?v:null}
