@@ -3,4 +3,4 @@ import { provideHttpClient } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
 import { AppComponent } from './app/app.component';
-bootstrapApplication(AppComponent, {providers:[provideHttpClient(),providePrimeNG({theme:{preset:Aura,options:{darkModeSelector:'.dark-mode'}}})]}).catch(console.error);
+bootstrapApplication(AppComponent,{providers:[provideHttpClient(),providePrimeNG({theme:{preset:Aura,options:{darkModeSelector:false}}})]}).catch(console.error);
