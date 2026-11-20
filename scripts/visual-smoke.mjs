@@ -21,6 +21,22 @@ app.get('/api/dashboard',(req,res)=>{
  if(!(req.headers.cookie||'').includes('atlas_test=1'))return res.status(401).json({error:'Login required'});
  res.json(data);
 });
+const nutrition={days:[
+ {date:'2026-11-14',kcal:1459,protein:63,carbs:115,fat:78,healthy:0,nonHealthy:1,healthyUnconfirmed:1,mealCount:1,
+   alcoholStatus:'confirmed',alcoholGrams:13.5,alcoholIncomplete:true,alcoholCount:2,spirits:true,
+   lossOfControl:true,daytimeConfirmed:false,warning:'',drinks:['Peroni','Sambuca — dose ignota']},
+ {date:'2026-12-01',kcal:2550,protein:152,carbs:243,fat:72,healthy:2,nonHealthy:1,healthyUnconfirmed:0,mealCount:3,
+   alcoholStatus:'unreported',alcoholGrams:null,alcoholIncomplete:false,alcoholCount:0,spirits:false,
+   lossOfControl:false,daytimeConfirmed:false,warning:'',drinks:[]},
+ {date:'2026-12-02',kcal:2350,protein:143,carbs:231,fat:80,healthy:2,nonHealthy:0,healthyUnconfirmed:1,mealCount:2,
+   alcoholStatus:'confirmed',alcoholGrams:23,alcoholIncomplete:false,alcoholCount:1,spirits:false,
+   lossOfControl:false,daytimeConfirmed:false,warning:'',drinks:['Vino rosso']}
+ ],sourceDates:{BEVANDE:'2026-12-02',PASTI_FOTO:'2026-12-02',QUOTIDIANO:'2026-12-02'},note:'Test con valori sintetici'};
+app.get('/api/nutrition',(req,res)=>{
+ if(!(req.headers.cookie||'').includes('atlas_test=1'))return res.status(401).json({error:'Login required'});
+ res.json(nutrition);
+});
+
 app.post('/api/session',(req,res)=>{
  if(req.body?.passcode!==CODE)return res.status(401).json({error:'Invalid'});
  res.cookie('atlas_test','1',{httpOnly:true,sameSite:'lax'}).json({ok:true});
@@ -104,6 +120,22 @@ async function suite(label,viewport){
  await page.locator('.streak-grid .p-card').first().waitFor({timeout:10000});
  check(await page.locator('.streak-grid .p-card').count()===3,label+' Health cards rendered');
  await page.screenshot({path:'test-artifacts/'+label+'-health.png',fullPage:true});
+ if(label==='mobile'){
+   await page.locator('.mobile-trigger').click();
+   await page.locator('.drawer-links button').filter({hasText:'Nutrizione'}).first().click({timeout:8000});
+ }else{
+   await page.locator('.desktop-sidebar button').filter({hasText:'Nutrizione'}).first().click({timeout:8000});
+ }
+ await page.locator('.nutrition-kpis .p-card').first().waitFor({timeout:12000});
+ check(await page.locator('.nutrition-kpis .p-card').count()===4,label+' Nutrition KPIs rendered from private API mock');
+ check(await page.locator('.nutrition-grid canvas').count()===4,label+' four PrimeNG nutrition charts drawn');
+ await page.locator('.date-input input[type="date"]').first().fill('2026-11-20');
+ await page.locator('.date-input input[type="date"]').first().dispatchEvent('change');
+ await page.locator('.nutrition-focus h3').waitFor({timeout:10000});
+ check((await page.locator('.nutrition-focus').innerText()).includes('14 novembre'),label+' missing-quantity Sambuca flagged as user-reported critical event');
+ const nutritionOverflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+ check(nutritionOverflow<=3,label+' Nutrition no horizontal overflow');
+ await page.screenshot({path:'test-artifacts/'+label+'-nutrition.png',fullPage:true});
  check(errors.length===0,label+' no JavaScript page errors: '+JSON.stringify(errors));
  await page.close();
 }

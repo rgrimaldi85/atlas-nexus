@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Input, OnChanges, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnChanges, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -37,6 +37,7 @@ const chartOpts=(unit:string,stacked=false)=>({
 @Component({
   selector:'app-nutrition',
   standalone:true,
+  encapsulation:ViewEncapsulation.None,
   imports:[CommonModule,ChartModule,CardModule,ButtonModule,TagModule,MessageModule,ProgressBarModule],
   templateUrl:'./nutrition.component.html',
   styleUrls:['./nutrition.component.css']
