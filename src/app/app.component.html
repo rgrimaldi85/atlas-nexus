@@ -71,11 +71,11 @@
     <ng-container *ngIf="!locked&&data">
       <section class="page-heading">
         <div>
-          <span class="overline">{{tab==='overview'?'LA TUA VISIONE D’INSIEME':tab==='health'?'HEALTH INTELLIGENCE':tab==='body'?'BODY & PERFORMANCE':tab==='mind'?'MENTAL WELLBEING':tab==='habits'?'LIFESTYLE PATTERNS':'ATLAS · EVIDENCE LAB'}}</span>
-          <h1>{{tab==='overview'?'Il tuo equilibrio, ogni giorno.':tab==='health'?'La salute nelle tue abitudini.':tab==='body'?'Progressi che contano.':tab==='mind'?'La mente fa parte del percorso.':tab==='habits'?'Le piccole scelte, viste da vicino.':'Le ipotesi, alla prova dei dati.'}}</h1>
-          <p>{{tab==='overview'?'Esplora le connessioni tra come vivi, come ti senti e come recuperi.':tab==='health'?'Nicotina, alcol, allenamenti e recupero: i cambiamenti misurati nel tempo.':tab==='body'?'Peso, forza, movimento, nutrizione e recupero nello stesso contesto.':tab==='mind'?'Stress, energia, serenità e motivazione nel loro contesto.':tab==='habits'?'Una lettura coerente di abitudini, esposizioni e attività.':'Distinguiamo segnali interessanti da coincidenze e supposizioni.'}}</p>
+          <span class="overline">{{tab==='overview'?'LA TUA VISIONE D’INSIEME':tab==='health'?'HEALTH INTELLIGENCE':tab==='body'?'BODY & PERFORMANCE':tab==='mind'?'MENTAL WELLBEING':tab==='habits'?'LIFESTYLE PATTERNS':tab==='nutrition'?'FOOD & ALCOHOL INTELLIGENCE':'ATLAS · EVIDENCE LAB'}}</span>
+          <h1>{{tab==='overview'?'Il tuo equilibrio, ogni giorno.':tab==='health'?'La salute nelle tue abitudini.':tab==='body'?'Progressi che contano.':tab==='mind'?'La mente fa parte del percorso.':tab==='habits'?'Le piccole scelte, viste da vicino.':tab==='nutrition'?'I pasti raccontano una storia.':'Le ipotesi, alla prova dei dati.'}}</h1>
+          <p>{{tab==='overview'?'Esplora le connessioni tra come vivi, come ti senti e come recuperi.':tab==='health'?'Nicotina, alcol, allenamenti e recupero: i cambiamenti misurati nel tempo.':tab==='body'?'Peso, forza, movimento, nutrizione e recupero nello stesso contesto.':tab==='mind'?'Stress, energia, serenità e motivazione nel loro contesto.':tab==='habits'?'Una lettura coerente di abitudini, esposizioni e attività.':tab==='nutrition'?'Qualità dei pasti, macro, alcol ed effetti sul recupero con incertezza esplicita.':'Distinguiamo segnali interessanti da coincidenze e supposizioni.'}}</p>
         </div>
-        <div class="title-emblem"><i [class]="tab==='health'?'pi pi-heart':tab==='mind'?'pi pi-sun':tab==='hypotheses'?'pi pi-lightbulb':'pi pi-chart-line'"></i></div>
+        <div class="title-emblem"><i [class]="tab==='nutrition'?'pi pi-chart-bar':tab==='health'?'pi pi-heart':tab==='mind'?'pi pi-sun':tab==='hypotheses'?'pi pi-lightbulb':'pi pi-chart-line'"></i></div>
       </section>
 
       <div class="date-toolbar">
@@ -136,6 +136,8 @@
         </p-card>
       </ng-container>
 
+      <app-nutrition *ngIf="tab==='nutrition'" [days]="data.days" [start]="dateBounds()[0]" [end]="dateBounds()[1]"></app-nutrition>
+
       <ng-container *ngIf="tab==='body'||tab==='mind'||tab==='habits'">
         <div class="section-head"><div><span class="overline">MEASUREMENT & CONTEXT</span><h2>{{tab==='body'?'Composizione, movimento, performance':tab==='mind'?'Come ti senti, nel tempo':'Il contesto delle tue scelte'}}</h2><p>Osservazioni nel periodo selezionato e copertura reale.</p></div></div>
         <div class="compact-kpis">
@@ -147,7 +149,7 @@
         </div>
       </ng-container>
 
-      <div class="analytics-layout" *ngIf="tab!=='hypotheses'">
+      <div class="analytics-layout" *ngIf="tab!=='hypotheses'&&tab!=='nutrition'">
         <p-card styleClass="analytics-card">
           <div class="card-heading"><div><span class="overline">SIGNAL EXPLORER</span><h2>Esplora le connessioni</h2><p>Seleziona gli indicatori, confrontali e cerca segnali che meritano un’analisi.</p></div><p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="secondary" pTooltip="Esporta CSV" tooltipPosition="left" (onClick)="download()"></p-button></div>
           <div class="graph-toolbar">

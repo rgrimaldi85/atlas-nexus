@@ -1,0 +1,102 @@
+<section class="nutrition-shell" aria-label="Nutrizione, qualità dei pasti e alcol">
+  <div class="nutrition-intro">
+    <div><span class="nut-kicker"><i class="pi pi-chart-bar"></i> ATLAS · FOOD INTELLIGENCE</span>
+      <h2>Non solo calorie. <em>Il contesto dietro i numeri.</em></h2>
+      <p>Il pasto Healthy, l'aderenza proteica, l'alcol e il recupero nello stesso intervallo, distinguendo fatti, stime e giorni non registrati.</p>
+    </div>
+    <p-button icon="pi pi-refresh" label="Rileggi ATLAS" [outlined]="true" severity="secondary" [loading]="loading" (onClick)="reload()"></p-button>
+  </div>
+  <p-message *ngIf="error" severity="warn" [text]="error"></p-message>
+  <p-message *ngIf="loading && !source" severity="secondary" text="Lettura privata dei registri in corso..."></p-message>
+
+  <ng-container *ngIf="source">
+    <div class="nutrition-kpis">
+      <p-card styleClass="nutrition-stat">
+        <div class="nut-stat-icon green"><i class="pi pi-check-circle"></i></div>
+        <span>PASTI HEALTHY</span><strong>{{percentLabel}}</strong>
+        <small>{{countHealthy}} / {{countMeals}} pasti classificati · proposte</small>
+        <p-progressBar [value]="healthyPct??0" [showValue]="false" [style]="{'height':'5px'}"></p-progressBar>
+      </p-card>
+      <p-card styleClass="nutrition-stat">
+        <div class="nut-stat-icon blue"><i class="pi pi-bolt"></i></div>
+        <span>PROTEINE MEDIE</span><strong>{{proteinLabel}}</strong>
+        <small>{{proteinCoverage}} giorni con valori · obiettivo 150–165 g</small>
+        <p-progressBar [value]="avgProtein===null?0:(avgProtein/150*100)" [showValue]="false" [style]="{'height':'5px'}"></p-progressBar>
+      </p-card>
+      <p-card styleClass="nutrition-stat">
+        <div class="nut-stat-icon coral"><i class="pi pi-exclamation-triangle"></i></div>
+        <span>GIORNI CON ALCOL</span><strong>{{confirmedAlcoholDays}} <span class="nut-mini">giorni</span></strong>
+        <small>Consumo confermato · {{possibleAlcoholDays}} giornate possibili</small>
+      </p-card>
+      <p-card styleClass="nutrition-stat">
+        <div class="nut-stat-icon amber"><i class="pi pi-info-circle"></i></div>
+        <span>DOSE NON COMPLETA</span><strong>{{incompleteCount}} <span class="nut-mini">giorni</span></strong>
+        <small>Almeno un alcolico senza quantità utilizzabile</small>
+      </p-card>
+    </div>
+
+    <p-card styleClass="nutrition-focus" *ngIf="prominentDate">
+      <div class="focus-line">
+        <div class="focus-icon"><i class="pi pi-flag-fill"></i></div>
+        <div><span>EVENTO PRIORITARIO · {{formatDay(prominentDate)}}</span><h3>Sabato 14 novembre · criticità riferita</h3>
+          <p>Big Tasty, birra confermata e sambuche dichiarate dopo il pasto. È la giornata che hai segnalato come perdita di controllo; non la definiamo la dose massima misurata: quantità di sambuca e orario esatto mancano.</p>
+        </div><p-tag severity="danger" value="Segnale riferito" [rounded]="true"></p-tag>
+      </div>
+    </p-card>
+
+    <p-message *ngIf="!hasData" severity="secondary" text="Nessun giorno registrato nell’intervallo scelto. Non equivale a digiuno o assenza di alcol."></p-message>
+    <div class="nutrition-grid" *ngIf="hasData">
+      <p-card styleClass="nutrition-chart-card">
+        <div class="nutrition-chart-title"><div><span>01 · QUALITÀ</span><h3>Pasti per giornata</h3><p>Healthy e Non Healthy secondo i flag proposti.</p></div><p-tag severity="secondary" value="Per pasto"></p-tag></div>
+        <div class="nutrition-plot"><p-chart type="bar" [data]="healthyData" [options]="healthyOptions"></p-chart></div>
+        <div class="nut-caption">Giorni senza pasti registrati non sono giorni Healthy. I flag retroattivi attendono conferma.</div>
+      </p-card>
+
+      <p-card styleClass="nutrition-chart-card">
+        <div class="nutrition-chart-title"><div><span>02 · APPORTO</span><h3>Proteine, carboidrati, grassi</h3><p>Grammature stimate o ricavate dalle etichette.</p></div><p-tag severity="info" value="g / giorno"></p-tag></div>
+        <div class="nutrition-plot"><p-chart type="bar" [data]="macroData" [options]="macroOptions"></p-chart></div>
+        <div class="nut-caption">La linea tratteggiata indica 150 g di proteine, non un limite per carboidrati o grassi. I totali potrebbero essere parziali.</div>
+      </p-card>
+
+      <p-card styleClass="nutrition-chart-card">
+        <div class="nutrition-chart-title"><div><span>03 · ESPOSIZIONE</span><h3>Alcol puro stimato</h3><p>Il registro bevande evita doppi conteggi calorici.</p></div><p-tag severity="warn" value="Dose incompleta in alcuni giorni"></p-tag></div>
+        <div class="nutrition-plot"><p-chart type="bar" [data]="alcoholData" [options]="alcoholOptions"></p-chart></div>
+        <div class="nut-caption">Una barra arancione rappresenta solo la dose nota: per il 14/11 le sambuche non sono quantificabili. Nessuna barra ≠ astinenza.</div>
+      </p-card>
+
+      <p-card styleClass="nutrition-chart-card">
+        <div class="nutrition-chart-title"><div><span>04 · RECUPERO</span><h3>Alcol e HRV del giorno dopo</h3><p>Esplorazione temporale, non prova di causalità.</p></div><p-tag severity="secondary" [value]="recoveryPairs+' coppie'"></p-tag></div>
+        <div class="nutrition-plot"><p-chart type="bar" [data]="recoveryData" [options]="recoveryOptions"></p-chart></div>
+        <div class="nut-caption">{{recoveryPairs<5?'Campione insufficiente per stimare una correlazione affidabile.':'Leggere insieme ad allenamento, stress e sonno; i dati sono osservazionali.'}} Le barre di alcol comprendono solo quantità note o stimate.</div>
+      </p-card>
+    </div>
+
+    <div class="nutrition-bottom" *ngIf="hasData">
+      <p-card styleClass="nutrition-events">
+        <div class="nutrition-chart-title"><div><span>05 · SEGNALI</span><h3>Giornate che meritano attenzione</h3><p>Priorità basate su dichiarazioni e stime, non diagnosi.</p></div></div>
+        <div class="nut-event-list">
+          <div class="nut-event" *ngFor="let a of alerts">
+            <div class="nut-event-date">{{formatDay(a.date)}}</div>
+            <div class="nut-event-main"><strong>{{a.title}}</strong><p>{{a.description}}</p></div>
+            <p-tag [severity]="a.severity" [value]="a.severity==='danger'?'Elevata':a.severity==='warn'?'Attenzione':'Contesto'"></p-tag>
+          </div>
+          <p *ngIf="!alerts.length" class="nut-caption">Non emergono segnali classificati nel periodo registrato.</p>
+        </div>
+      </p-card>
+      <p-card styleClass="nutrition-records">
+        <div class="nutrition-chart-title"><div><span>06 · DETTAGLIO</span><h3>Diario giornaliero</h3><p>Valori originali o stimati. I vuoti restano vuoti.</p></div></div>
+        <div class="nut-records-scroll">
+          <div class="nut-record-row nut-head"><span>DATA</span><span>KCAL</span><span>PROTEINE</span><span>HEALTHY</span><span>ALCOL</span></div>
+          <div class="nut-record-row" *ngFor="let d of lastDays">
+            <strong>{{formatDay(d.date)}}</strong><span>{{d.kcal===null?'—':(d.kcal|number:'1.0-0')}}</span>
+            <span>{{d.protein===null?'—':(d.protein|number:'1.0-0')+' g'}}</span>
+            <span>{{d.healthy+d.nonHealthy===0?'—':d.healthy+'/'+(d.healthy+d.nonHealthy)}}</span>
+            <p-tag [severity]="d.alcoholStatus==='confirmed'?'warn':d.alcoholStatus==='possible'?'secondary':'secondary'"
+              [value]="d.alcoholStatus==='confirmed'?'Presente':d.alcoholStatus==='possible'?'Possibile':'N/D'"></p-tag>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    <p class="nut-source">Fonte privata: ATLAS / QUOTIDIANO, PASTI_FOTO, BEVANDE. Date nel registro fino al {{formatDay(lastSourceDate)}}. I dati sono ricaricati dal foglio quando apri o aggiorni questa vista; nessuna sincronizzazione periodica implicita.</p>
+  </ng-container>
+</section>

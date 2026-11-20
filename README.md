@@ -13,3 +13,8 @@ Single Docker web service; `PORT` defaults to 8080 and `GET /healthz` is availab
 `npm install`; `npm run build`; `npm start`. For Angular development: `npm run dev` with backend on port 8080.
 
 Current Google Sheets API permissions are read-only. The WEEKLY analysis automation is separate from the web application. Data sync from health4ai to NEXUS is not built into this web service. This is a deployment candidate; live Google integration requires a service account and explicit sharing of the two private Google Sheets.
+
+
+## Nutrition & alcohol — 2026-11-20
+Authenticated \`GET /api/nutrition\` reads the original ATLAS workbook \`QUOTIDIANO\`, \`PASTI_FOTO\`, and \`BEVANDE\`, preserving missingness, confirmed versus possible alcohol, and whether a drink has a quantified dose. The Angular PrimeNG tab \`?tab=nutrition\` shows per-day meal flags, protein/carbs/fat, alcohol grams (partial when some spirits have unknown quantities), and next-day HRV, if available. No personal observations are embedded in the public repository.
+Set the **Render environment variable** \`ATLAS_SHEET_ID\` to the private ATLAS workbook id (merge with existing secrets), and grant existing service account read-only access to that workbook. If unavailable, the tab shows an explicit source-access error rather than inventing data. All reads are on-demand; scheduled check-ins remain separate from technical synchronization.

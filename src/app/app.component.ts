@@ -19,6 +19,7 @@ import { PasswordModule } from 'primeng/password';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { MessageModule } from 'primeng/message';
 import { AvatarModule } from 'primeng/avatar';
+import { NutritionComponent } from './nutrition.component';
 
 interface Day {date:string;steps:number|null;sleep:number|null;hrv:number|null;rhr:number|null;weight:number|null;kcal:number|null;protein:number|null;workout:number|null;atlasDone:number|null;nicotine:number|null;alcohol:number|null;event:string}
 interface Mood {date:string;happiness:number|null;calm:number|null;energy:number|null;connection:number|null;stress:number|null;motivation:number|null}
@@ -45,7 +46,7 @@ const METRICS:Metric[]=[
 function dateAdd(s:string,n:number):string {const d=new Date(s+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}
 function mean(a:(number|null)[]):number|null {const b=a.filter((x):x is number=>x!==null&&Number.isFinite(x));return b.length?b.reduce((p,q)=>p+q,0)/b.length:null}
 function pearson(a:(number|null)[],b:(number|null)[]){const p=a.map((v,i)=>[v,b[i]]).filter((v):v is number[]=>v[0]!==null&&v[1]!==null);if(p.length<5)return {n:p.length,r:null};const x=mean(p.map(t=>t[0]))!,y=mean(p.map(t=>t[1]))!;const xx=p.reduce((s,t)=>s+(t[0]-x)**2,0),yy=p.reduce((s,t)=>s+(t[1]-y)**2,0),xy=p.reduce((s,t)=>s+(t[0]-x)*(t[1]-y),0);return {n:p.length,r:xx*yy?xy/Math.sqrt(xx*yy):null}}
-@Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule,ChartModule,ButtonModule,SelectModule,MultiSelectModule,TagModule,InputTextModule,ProgressBarModule,CardModule,DrawerModule,CheckboxModule,DividerModule,TooltipModule,PasswordModule,SelectButtonModule,MessageModule,AvatarModule],templateUrl:'./app.component.html'})
+@Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule,ChartModule,ButtonModule,SelectModule,MultiSelectModule,TagModule,InputTextModule,ProgressBarModule,CardModule,DrawerModule,CheckboxModule,DividerModule,TooltipModule,PasswordModule,SelectButtonModule,MessageModule,AvatarModule,NutritionComponent],templateUrl:'./app.component.html'})
 export class AppComponent implements OnInit {
  private http=inject(HttpClient);private cdr=inject(ChangeDetectorRef);data:Bundle|null=null;loading=false;error='';locked=true;passcode='';tab='overview';period:Period='month';mode='native';baselineWindow=30;
  anchor=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Zurich'});from=dateAdd(this.anchor,-29);to=this.anchor;
@@ -54,6 +55,7 @@ readonly metrics=METRICS; readonly tabs=[
  {id:'overview',name:'Overview',icon:'pi pi-th-large'},
  {id:'health',name:'Health',icon:'pi pi-heart'},
  {id:'body',name:'Corpo & Recovery',icon:'pi pi-chart-line'},
+ {id:'nutrition',name:'Nutrizione & Alcol',icon:'pi pi-chart-bar'},
  {id:'mind',name:'Mind',icon:'pi pi-sun'},
  {id:'habits',name:'Abitudini',icon:'pi pi-calendar'},
  {id:'hypotheses',name:'Ipotesi',icon:'pi pi-lightbulb'}
@@ -63,6 +65,7 @@ readonly metricOptions=METRICS.map(m=>({label:m.name+' · '+m.unit,value:m.key})
 readonly modeOptions=[{label:'Valori originali',value:'native'},{label:'Indice base 100',value:'index'}];
 readonly baselineOptions=[{label:'30 giorni',value:30},{label:'45 giorni',value:45},{label:'90 giorni',value:90}];
 setTab(id:string){this.tab=id;this.mobileMenu=false;
+ if(id==='nutrition'){try{const url=new URL(window.location.href);url.searchParams.set('tab','nutrition');history.replaceState({},'',url.pathname+url.search)}catch{}}
  if(id==='mind')this.selected=['stress','calm'];
  else if(id==='body')this.selected=['weight','protein'];
  else if(id==='health')this.selected=['hrv','sleep'];
@@ -109,7 +112,7 @@ get selectionDescription(){return this.mode==='native'&&this.selected.length>2?'
  lineData:any={labels:[],datasets:[]};lineOptions:any={};eventData:any={labels:[],datasets:[]};eventOptions:any={};
  kpis:{name:string;average:number|null;unit:string;color:string;n:number}[]=[];validDays=0;insight='';eventList:Event[]=[];
  get periodLabel(){return ({day:'Giorno',week:'Settimana',month:'Mese',year:'Anno',custom:'Personalizzato'})[this.period]}
- ngOnInit(){try{this.saved=Object.keys(JSON.parse(localStorage.getItem('atlas-nexus-presets')||'{}'));this.sideCollapsed=localStorage.getItem('atlas-sidebar-collapsed')==='1'}catch{};void this.reload()}
+ ngOnInit(){try{if(new URLSearchParams(window.location.search).get('tab')==='nutrition')this.tab='nutrition'}catch{};try{this.saved=Object.keys(JSON.parse(localStorage.getItem('atlas-nexus-presets')||'{}'));this.sideCollapsed=localStorage.getItem('atlas-sidebar-collapsed')==='1'}catch{};void this.reload()}
  async reload(){this.loading=true;this.error='';this.cdr.markForCheck();try{this.data=await firstValueFrom(this.http.get<Bundle>('/api/dashboard',{withCredentials:true}));this.locked=false;this.sourceUpdated=new Date().toLocaleString('it-CH');if(this.data.days.length)this.anchor=this.data.days[this.data.days.length-1].date;this.build()}catch(e:any){this.locked=e.status===401;this.error=this.locked?'Inserisci il codice di accesso per visualizzare la dashboard.':(e?.error?.error||'Non è stato possibile leggere Google Sheets.')}finally{this.loading=false;this.cdr.markForCheck()}}
  async login(){this.error='';this.cdr.markForCheck();try{await firstValueFrom(this.http.post('/api/session',{passcode:this.passcode},{withCredentials:true}));this.passcode='';await this.reload()}catch{this.error='Codice di accesso non valido o servizio non disponibile.';this.cdr.markForCheck()}}
  async logout(){try{await firstValueFrom(this.http.delete('/api/session',{withCredentials:true}));this.data=null;this.locked=true}finally{this.cdr.markForCheck()}}

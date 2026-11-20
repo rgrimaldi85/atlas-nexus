@@ -1,0 +1,50 @@
+:host{display:block;min-width:0}
+.nutrition-shell{display:flex;flex-direction:column;gap:21px;margin:0 0 25px}
+.nutrition-intro{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:27px 29px;background:linear-gradient(112deg,#1d3151,#26395e 60%,#36516c);border-radius:19px;color:#fff;overflow:hidden;position:relative}
+.nutrition-intro:after{content:'';width:265px;height:265px;position:absolute;right:40px;top:-150px;border:35px solid #ffffff0b;border-radius:50%;pointer-events:none}
+.nutrition-intro>div{max-width:690px;z-index:1}.nut-kicker{font-size:10px;letter-spacing:1.8px;color:#7bd9cc;font-weight:800;text-transform:uppercase;display:flex;align-items:center;gap:9px}
+.nutrition-intro h2{font-size:clamp(23px,2.7vw,34px);line-height:1.22;letter-spacing:-.9px;margin:11px 0 9px;font-weight:800}.nutrition-intro em{font-style:normal;color:#9ce0cf}
+.nutrition-intro p{color:#b8c8db;line-height:1.65;font-size:12px;margin:0}
+.nutrition-intro p-button{flex-shrink:0;z-index:1}.nutrition-intro .p-button{background:#ffffff14!important;border-color:#ffffff40!important;color:white!important}
+.nutrition-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.nutrition-kpis p-card,.nutrition-grid p-card,.nutrition-bottom p-card{min-width:0}
+.nutrition-stat.p-card,.nutrition-chart-card.p-card,.nutrition-events.p-card,.nutrition-records.p-card{height:100%;border:1px solid #e7ebf3;box-shadow:0 7px 30px #1b33520a;border-radius:16px;overflow:hidden}
+.nutrition-stat.p-card .p-card-body{padding:19px 21px}.nutrition-stat .p-card-content{display:flex;flex-direction:column;gap:7px}
+.nut-stat-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:11px;font-size:17px;margin-bottom:5px}
+.nut-stat-icon.green{color:#159e82;background:#dcf7f0}.nut-stat-icon.blue{color:#6661c7;background:#eeedff}
+.nut-stat-icon.coral{color:#d66d61;background:#fff0e8}.nut-stat-icon.amber{color:#c59432;background:#fff4dd}
+.nutrition-stat span{font-size:10px;letter-spacing:1.2px;color:#7f8fa5;font-weight:850}
+.nutrition-stat strong{font-size:32px;font-weight:840;letter-spacing:-1px;color:#202f48;line-height:1.13}
+.nutrition-stat strong span.nut-mini{letter-spacing:0;font-size:13px;font-weight:650;color:#8191a5}
+.nutrition-stat small{font-size:10px;color:#8492a8;line-height:1.45;min-height:28px}
+.nutrition-stat .p-progressbar{margin-top:4px}
+.nutrition-focus.p-card{border:1px solid #f3d9d3!important;background:#fff8f4!important;border-radius:16px!important;box-shadow:none!important}
+.nutrition-focus .p-card-body{padding:22px!important}.focus-line{display:flex;gap:16px;align-items:flex-start}
+.focus-icon{display:grid;place-items:center;height:44px;width:44px;flex-shrink:0;background:#ffebe4;color:#d1665a;border-radius:13px;font-size:18px}
+.focus-line>div:nth-child(2){flex:1;min-width:0}.focus-line span{font-size:10px;letter-spacing:1.6px;color:#b97970;font-weight:850}
+.focus-line h3{margin:5px 0 6px;color:#85473f;font-size:17px}.focus-line p{color:#90645d;line-height:1.65;font-size:12px;margin:0}.focus-line p-tag{flex-shrink:0}
+.nutrition-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.nutrition-chart-card .p-card-body,.nutrition-events .p-card-body,.nutrition-records .p-card-body{padding:22px!important;height:100%}
+.nutrition-chart-title{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:17px}
+.nutrition-chart-title span{font-size:10px;letter-spacing:1.25px;color:#7a71db;font-weight:850}
+.nutrition-chart-title h3{font-size:18px;letter-spacing:-.35px;color:#24344b;margin:7px 0 5px;font-weight:790}
+.nutrition-chart-title p{font-size:11px;color:#8591a6;line-height:1.45;margin:0}
+.nutrition-chart-title p-tag{flex-shrink:0}
+.nutrition-plot{height:276px;position:relative}
+.nutrition-plot p-chart{display:block;height:100%}.nutrition-plot .p-chart{height:100%;width:100%}
+.nut-caption{margin:14px 0 0;font-size:10.5px;line-height:1.55;color:#8995a7;border-top:1px solid #edf0f5;padding-top:12px}
+.nutrition-bottom{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:start}
+.nut-event-list{max-height:420px;overflow:auto}
+.nut-event{border-top:1px solid #eef1f7;display:flex;align-items:flex-start;gap:12px;padding:15px 0}
+.nut-event-date{font-size:12px;color:#727e97;font-weight:750;min-width:46px;margin-top:3px}
+.nut-event-main{flex:1;min-width:0}.nut-event-main strong{font-size:12px;color:#30425a;font-weight:800}
+.nut-event-main p{font-size:11px;line-height:1.45;margin:4px 0 0;color:#8190a4}.nut-event p-tag{flex-shrink:0}
+.nut-records-scroll{max-height:420px;overflow:auto}
+.nut-record-row{display:grid;grid-template-columns:70px 80px 95px 70px minmax(80px,1fr);gap:5px;align-items:center;min-height:44px;padding:10px 5px;border-top:1px solid #eef1f7;font-size:11px;color:#6a7892}
+.nut-record-row strong{font-size:11px;color:#30425a}
+.nut-record-row.nut-head{font-size:9px;font-weight:850;letter-spacing:.5px;color:#a1adbc;border:0;min-height:30px}
+.nut-record-row p-tag{justify-self:start}
+.nut-source{font-size:10.5px;line-height:1.7;color:#8494aa;margin:0 2px}
+@media(max-width:1200px){.nutrition-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.nutrition-bottom{grid-template-columns:1fr}}
+@media(max-width:820px){.nutrition-grid{grid-template-columns:1fr}.nutrition-intro{flex-wrap:wrap;padding:23px}.nutrition-intro p-button{width:100%}.focus-line{flex-wrap:wrap}.focus-line p-tag{margin-left:60px}}
+@media(max-width:550px){.nutrition-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.nutrition-stat.p-card .p-card-body{padding:14px}.nutrition-stat strong{font-size:26px}.nutrition-stat small{font-size:9px}.nutrition-chart-card .p-card-body,.nutrition-events .p-card-body,.nutrition-records .p-card-body{padding:15px!important}.nutrition-chart-title{flex-wrap:wrap}.nutrition-plot{height:260px}.nut-record-row{grid-template-columns:54px 60px 71px 50px minmax(65px,1fr);font-size:10px}.nut-record-row.nut-head{font-size:8px}.nut-event{gap:8px}.nut-event-date{min-width:40px}.nut-event p-tag{max-width:76px}}

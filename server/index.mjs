@@ -7,7 +7,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const app=express();app.disable('x-powered-by');app.use(express.json({limit:'4kb'}));
 const PORT=Number(process.env.PORT||8080), ACCESS=process.env.ATLAS_ACCESS_CODE, SECRET=process.env.ATLAS_SESSION_SECRET;
-const NEXUS=process.env.NEXUS_SHEET_ID,MIND=process.env.MIND_SHEET_ID;
+const NEXUS=process.env.NEXUS_SHEET_ID,MIND=process.env.MIND_SHEET_ID,ATLAS=process.env.ATLAS_SHEET_ID;
 if(!ACCESS||ACCESS.length<16||!SECRET||SECRET.length<32)throw Error('Missing ATLAS_ACCESS_CODE or ATLAS_SESSION_SECRET');
 app.set('trust proxy',1);app.use((req,res,next)=>{res.set({'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY','Content-Security-Policy':"default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"});next()});
 const attempts=new Map(),cookieName='atlas_session',ttl=7*86400000;
@@ -32,6 +32,58 @@ const api=google.sheets({version:'v4',auth});
 async function read(id,range){const r=await api.spreadsheets.values.get({spreadsheetId:id,range,valueRenderOption:'FORMATTED_VALUE'});return r.data.values||[]}
 app.get('/healthz',(_req,res)=>res.json({ok:true,service:'atlas-nexus'}));
 app.get('/api/dashboard',async(req,res)=>{if(!valid(req))return res.status(401).json({error:'Autenticazione richiesta'});if(!NEXUS||!MIND)return res.status(503).json({error:'Google Sheets non ancora configurato sul server.'});try{const [daily,mind,hyp,evt]=await Promise.all([read(NEXUS,"'SERIE_365'!A1:N1500"),read(MIND,"'DAILY_EMOTIONS'!A1:L1500"),read(NEXUS,"'IPOTESI_REGISTRO'!A1:P500"),read(NEXUS,"'EVENTI_CHIAVE'!A1:E500")]);const d=days(daily),m=moods(mind),h=hyps(hyp),e=events(evt);res.json({lastRefresh:new Date().toISOString(),sourceDates:{NEXUS:d.at(-1)?.date||'',MIND:m.at(-1)?.date||'',IPOTESI:String(h.length)},days:d,mood:m,hypotheses:h,events:e})}catch(err){console.error('Google Sheets API failed',err?.code||err?.message?.split('\n')[0]);res.status(503).json({error:'Impossibile leggere i fogli privati. Verifica service account e permessi.'})}});
+
+function trimLabel(v,max=130){return String(v??'').slice(0,max)}
+function normalizeAlcohol(r){
+ const name=trimLabel(get(r,3),100),q=trimLabel(get(r,4),130),note=String(get(r,11)).slice(0,1800),slot=trimLabel(get(r,12),100);
+ return {date:iso(get(r,0)),name,quantity:q,kcal:num(get(r,6)),grams:num(get(r,8)),
+   confirmed:String(get(r,9)).toUpperCase()==='SI',spirits:/sambuca|negroni|gin|vodka|whisk|rum|grappa|amaro|cocktail|superalcol/i.test(name),
+   lossOfControl:/perdita di controllo|perso il controllo/i.test(note),slot};
+}
+function nutritionRows(dailyRows,mealRows,beverageRows){
+ const byDate=new Map();
+ function ensure(date){if(!byDate.has(date))byDate.set(date,{date,kcal:null,protein:null,carbs:null,fat:null,
+   healthy:0,nonHealthy:0,healthyUnconfirmed:0,mealCount:0,alcoholStatus:'unreported',
+   alcoholGrams:null,alcoholIncomplete:false,alcoholCount:0,spirits:false,
+   lossOfControl:false,daytimeConfirmed:false,warning:'',drinks:[]});return byDate.get(date)}
+ for(const r of dailyRows.slice(1)){const date=iso(get(r,0));if(!date)continue;const d=ensure(date);
+   d.kcal=num(get(r,2));d.protein=num(get(r,3));d.carbs=num(get(r,9));d.fat=num(get(r,10))}
+ for(const r of mealRows.slice(1)){const date=iso(get(r,0));if(!date||!String(get(r,2)).trim())continue;
+   const d=ensure(date);d.mealCount++;
+   if(String(get(r,14)).trim()==='Healthy')d.healthy++;
+   if(String(get(r,14)).trim()==='Non Healthy')d.nonHealthy++;
+   if(String(get(r,17)).trim()!=='Confermato')d.healthyUnconfirmed++}
+ for(const r of beverageRows.slice(1)){const date=iso(get(r,0));if(!date||String(get(r,2)).trim()!=='Alcol')continue;
+   const d=ensure(date),a=normalizeAlcohol(r);d.alcoholCount++;
+   if(a.confirmed)d.alcoholStatus='confirmed';else if(d.alcoholStatus!=='confirmed')d.alcoholStatus='possible';
+   if(a.confirmed){
+     if(a.grams!==null)d.alcoholGrams=(d.alcoholGrams??0)+a.grams;else d.alcoholIncomplete=true;
+     d.spirits=d.spirits||a.spirits;d.lossOfControl=d.lossOfControl||a.lossOfControl;
+     if(/pranzo confermato/i.test(a.slot))d.daytimeConfirmed=true;
+   }
+   d.drinks.push(a.name+' · '+a.quantity+(a.confirmed?' [confermato]':' [da confermare]'));
+ }
+ return [...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date));
+}
+app.get('/api/nutrition',async(req,res)=>{
+ if(!valid(req))return res.status(401).json({error:'Autenticazione richiesta'});
+ if(!ATLAS)return res.status(503).json({error:'ATLAS_SHEET_ID non configurato nel servizio Render'});
+ try{
+   const [daily,meals,drinks]=await Promise.all([
+     read(ATLAS,"'QUOTIDIANO'!A4:K1100"),
+     read(ATLAS,"'PASTI_FOTO'!A4:R1100"),
+     read(ATLAS,"'BEVANDE'!A1:M1100")
+   ]);
+   const d=nutritionRows(daily,meals,drinks);
+   const latest=(rows,start)=>rows.slice(start).map(x=>iso(get(x,0))).filter(Boolean).sort().at(-1)||'';
+   res.json({days:d,sourceDates:{QUOTIDIANO:latest(daily,1),PASTI_FOTO:latest(meals,1),BEVANDE:latest(drinks,1)},
+     note:'Lettura privata live; kcal alcol già incluse nel diario. Nessun valore mancante trasformato in zero.'});
+ }catch(err){
+   console.error('ATLAS Nutrition read failed',err?.code||err?.message?.split('\n')[0]);
+   res.status(503).json({error:'Google Sheets ATLAS non leggibile dal servizio: condividi il workbook con il service account già configurato.'});
+ }
+});
+
 const dir=path.dirname(fileURLToPath(import.meta.url)),publicDir=path.join(dir,'../dist/atlas-nexus/browser');
 const builtHtml=fs.readFileSync(path.join(publicDir,'index.html'),'utf8');
 const atlasCssMarker='data-atlas-embedded="v3.1"';
@@ -40,4 +92,7 @@ if(!builtHtml.includes(atlasCssMarker)||!builtHtml.includes('.atlas-app.is-locke
 }
 console.log('ATLAS CSS VERIFIED: embedded global layout + responsive stylesheet in HTML');
 app.use(express.static(publicDir,{index:false}));app.get(/^\/(?!api\/).*/,(_req,res)=>res.sendFile(path.join(publicDir,'index.html')));
-app.listen(PORT,'0.0.0.0',()=>console.log('ATLAS NEXUS listening on '+PORT));
+app.listen(PORT,'0.0.0.0',()=>{console.log('ATLAS NEXUS listening on '+PORT);
+ if(ATLAS)read(ATLAS,"'BEVANDE'!A1:A2").then(()=>console.log('ATLAS NUTRITION SOURCE ACCESS VERIFIED')).catch(e=>console.error('ATLAS NUTRITION SOURCE UNAVAILABLE',e?.code||'access_denied'));
+ else console.error('ATLAS NUTRITION NOT CONFIGURED: ATLAS_SHEET_ID');
+});
