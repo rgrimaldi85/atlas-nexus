@@ -128,7 +128,7 @@ async function suite(label,viewport){
  }
  await page.locator('.nutrition-kpis .p-card').first().waitFor({timeout:12000});
  check(await page.locator('.nutrition-kpis .p-card').count()===4,label+' Nutrition KPIs rendered from private API mock');
- check(await page.locator('.nutrition-grid canvas').count()===4,label+' four PrimeNG nutrition charts drawn');
+ check(await page.locator('.nutrition-grid canvas').count()===5,label+' five PrimeNG nutrition charts drawn');
  await page.locator('.date-input input[type="date"]').first().fill('2026-11-20');
  await page.locator('.date-input input[type="date"]').first().dispatchEvent('change');
  await page.locator('.nutrition-focus h3').waitFor({timeout:10000});

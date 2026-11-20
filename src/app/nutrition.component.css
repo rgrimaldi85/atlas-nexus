@@ -48,3 +48,6 @@
 @media(max-width:1200px){.nutrition-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.nutrition-bottom{grid-template-columns:1fr}}
 @media(max-width:820px){.nutrition-grid{grid-template-columns:1fr}.nutrition-intro{flex-wrap:wrap;padding:23px}.nutrition-intro p-button{width:100%}.focus-line{flex-wrap:wrap}.focus-line p-tag{margin-left:60px}}
 @media(max-width:550px){.nutrition-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.nutrition-stat.p-card .p-card-body{padding:14px}.nutrition-stat strong{font-size:26px}.nutrition-stat small{font-size:9px}.nutrition-chart-card .p-card-body,.nutrition-events .p-card-body,.nutrition-records .p-card-body{padding:15px!important}.nutrition-chart-title{flex-wrap:wrap}.nutrition-plot{height:260px}.nut-record-row{grid-template-columns:54px 60px 71px 50px minmax(65px,1fr);font-size:10px}.nut-record-row.nut-head{font-size:8px}.nut-event{gap:8px}.nut-event-date{min-width:40px}.nut-event p-tag{max-width:76px}}
+
+.nutrition-facts{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.nutrition-facts p-tag{max-width:100%}

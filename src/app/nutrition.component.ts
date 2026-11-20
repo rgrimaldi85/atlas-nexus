@@ -54,10 +54,12 @@ export class NutritionComponent implements OnInit,OnChanges {
   countHealthy=0;countMeals=0;confirmedAlcoholDays=0;possibleAlcoholDays=0;incompleteCount=0;recoveryPairs=0;
   healthyData:any={labels:[],datasets:[]};
   macroData:any={labels:[],datasets:[]};
+  calorieData:any={labels:[],datasets:[]};
   alcoholData:any={labels:[],datasets:[]};
   recoveryData:any={labels:[],datasets:[]};
   healthyOptions:any=chartOpts('Pasti',true);
   macroOptions:any=chartOpts('Grammi');
+  calorieOptions:any=chartOpts('kcal registrate');
   alcoholOptions:any=chartOpts('Alcol puro stimato (g)');
   recoveryOptions:any={};
   ngOnInit(){void this.reload()}
@@ -97,6 +99,10 @@ export class NutritionComponent implements OnInit,OnChanges {
       {label:'Carboidrati',data:v.map(x=>x.carbs),backgroundColor:COLORS.carbs,borderRadius:5,maxBarThickness:21},
       {label:'Grassi',data:v.map(x=>x.fat),backgroundColor:COLORS.fat,borderRadius:5,maxBarThickness:21},
       {type:'line',label:'Target proteine · 150 g',data:v.map(x=>x.protein===null?null:150),borderColor:'#788597',borderDash:[5,5],pointRadius:0,borderWidth:1.8,fill:false,spanGaps:false}
+    ]};
+    this.calorieData={labels,datasets:[
+      {label:'Calorie registrate (totale non garantito)',data:v.map(x=>x.kcal),
+       backgroundColor:v.map(x=>x.alcoholIncomplete?'#edb46d':'#6f87da'),borderRadius:5,maxBarThickness:34}
     ]};
     this.alcoholData={labels,datasets:[
       {label:'Quantità nota o stimata (parziale se altre dosi ignote)',data:v.map(x=>x.alcoholGrams),
@@ -142,5 +148,6 @@ export class NutritionComponent implements OnInit,OnChanges {
   get proteinLabel(){return this.avgProtein===null?'—':Math.round(this.avgProtein)+' g'}
   get proteinCoverage(){return this.visible.filter(x=>x.protein!==null).length}
   get alcoholCoverage(){return this.visible.filter(x=>x.alcoholStatus!=='unreported').length}
+  get confirmedLunchDrinks(){return this.visible.filter(x=>x.daytimeConfirmed).length}
   get prominentDate(){return this.visible.find(x=>x.lossOfControl)?.date||''}
 }

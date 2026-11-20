@@ -44,6 +44,11 @@
       </div>
     </p-card>
 
+    <div class="nutrition-facts" *ngIf="hasData">
+      <p-tag icon="pi pi-check-circle" severity="warn" [value]="'Alcol a pranzo confermato: '+confirmedLunchDrinks+' giornate'"></p-tag>
+      <p-tag *ngIf="prominentDate" icon="pi pi-clock" severity="secondary" value="Sambuche dopo il pasto: ora non dichiarata"></p-tag>
+      <p-tag icon="pi pi-info-circle" severity="secondary" value="Non segnalato ≠ assente"></p-tag>
+    </div>
     <p-message *ngIf="!hasData" severity="secondary" text="Nessun giorno registrato nell’intervallo scelto. Non equivale a digiuno o assenza di alcol."></p-message>
     <div class="nutrition-grid" *ngIf="hasData">
       <p-card styleClass="nutrition-chart-card">
@@ -59,13 +64,19 @@
       </p-card>
 
       <p-card styleClass="nutrition-chart-card">
-        <div class="nutrition-chart-title"><div><span>03 · ESPOSIZIONE</span><h3>Alcol puro stimato</h3><p>Il registro bevande evita doppi conteggi calorici.</p></div><p-tag severity="warn" value="Dose incompleta in alcuni giorni"></p-tag></div>
+        <div class="nutrition-chart-title"><div><span>03 · ENERGIA</span><h3>Calorie registrate</h3><p>Totali giornalieri, quando disponibili nel diario.</p></div><p-tag severity="secondary" value="kcal"></p-tag></div>
+        <div class="nutrition-plot"><p-chart type="bar" [data]="calorieData" [options]="calorieOptions"></p-chart></div>
+        <div class="nut-caption">Il 14/11 è un totale incompleto: calorie delle sambuche non quantificate. Altri giorni possono avere pasti non registrati.</div>
+      </p-card>
+
+      <p-card styleClass="nutrition-chart-card">
+        <div class="nutrition-chart-title"><div><span>04 · ESPOSIZIONE</span><h3>Alcol puro stimato</h3><p>Il registro bevande evita doppi conteggi calorici.</p></div><p-tag severity="warn" value="Dose incompleta in alcuni giorni"></p-tag></div>
         <div class="nutrition-plot"><p-chart type="bar" [data]="alcoholData" [options]="alcoholOptions"></p-chart></div>
         <div class="nut-caption">Una barra arancione rappresenta solo la dose nota: per il 14/11 le sambuche non sono quantificabili. Nessuna barra ≠ astinenza.</div>
       </p-card>
 
       <p-card styleClass="nutrition-chart-card">
-        <div class="nutrition-chart-title"><div><span>04 · RECUPERO</span><h3>Alcol e HRV del giorno dopo</h3><p>Esplorazione temporale, non prova di causalità.</p></div><p-tag severity="secondary" [value]="recoveryPairs+' coppie'"></p-tag></div>
+        <div class="nutrition-chart-title"><div><span>05 · RECUPERO</span><h3>Alcol e HRV del giorno dopo</h3><p>Esplorazione temporale, non prova di causalità.</p></div><p-tag severity="secondary" [value]="recoveryPairs+' coppie'"></p-tag></div>
         <div class="nutrition-plot"><p-chart type="bar" [data]="recoveryData" [options]="recoveryOptions"></p-chart></div>
         <div class="nut-caption">{{recoveryPairs<5?'Campione insufficiente per stimare una correlazione affidabile.':'Leggere insieme ad allenamento, stress e sonno; i dati sono osservazionali.'}} Le barre di alcol comprendono solo quantità note o stimate.</div>
       </p-card>
@@ -73,7 +84,7 @@
 
     <div class="nutrition-bottom" *ngIf="hasData">
       <p-card styleClass="nutrition-events">
-        <div class="nutrition-chart-title"><div><span>05 · SEGNALI</span><h3>Giornate che meritano attenzione</h3><p>Priorità basate su dichiarazioni e stime, non diagnosi.</p></div></div>
+        <div class="nutrition-chart-title"><div><span>06 · SEGNALI</span><h3>Giornate che meritano attenzione</h3><p>Priorità basate su dichiarazioni e stime, non diagnosi.</p></div></div>
         <div class="nut-event-list">
           <div class="nut-event" *ngFor="let a of alerts">
             <div class="nut-event-date">{{formatDay(a.date)}}</div>
@@ -84,7 +95,7 @@
         </div>
       </p-card>
       <p-card styleClass="nutrition-records">
-        <div class="nutrition-chart-title"><div><span>06 · DETTAGLIO</span><h3>Diario giornaliero</h3><p>Valori originali o stimati. I vuoti restano vuoti.</p></div></div>
+        <div class="nutrition-chart-title"><div><span>07 · DETTAGLIO</span><h3>Diario giornaliero</h3><p>Valori originali o stimati. I vuoti restano vuoti.</p></div></div>
         <div class="nut-records-scroll">
           <div class="nut-record-row nut-head"><span>DATA</span><span>KCAL</span><span>PROTEINE</span><span>HEALTHY</span><span>ALCOL</span></div>
           <div class="nut-record-row" *ngFor="let d of lastDays">
