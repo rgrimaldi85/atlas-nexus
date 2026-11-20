@@ -38,15 +38,15 @@
     <p-card styleClass="nutrition-focus" *ngIf="prominentDate">
       <div class="focus-line">
         <div class="focus-icon"><i class="pi pi-flag-fill"></i></div>
-        <div><span>EVENTO PRIORITARIO · {{formatDay(prominentDate)}}</span><h3>Sabato 14 novembre · criticità riferita</h3>
-          <p>Big Tasty, birra confermata e sambuche dichiarate dopo il pasto. È la giornata che hai segnalato come perdita di controllo; non la definiamo la dose massima misurata: quantità di sambuca e orario esatto mancano.</p>
+        <div><span>EVENTO SEGNALATO · {{formatDay(prominentDate)}}</span><h3>Criticità elevata percepita</h3>
+          <p>In questo giorno è stata riferita una perdita di controllo associata ad alcolici. Il flag segue la tua dichiarazione; non stabilisce quale giorno abbia la dose massima, soprattutto quando quantità e orario non sono disponibili.</p>
         </div><p-tag severity="danger" value="Segnale riferito" [rounded]="true"></p-tag>
       </div>
     </p-card>
 
     <div class="nutrition-facts" *ngIf="hasData">
       <p-tag icon="pi pi-check-circle" severity="warn" [value]="'Alcol a pranzo confermato: '+confirmedLunchDrinks+' giornate'"></p-tag>
-      <p-tag *ngIf="prominentDate" icon="pi pi-clock" severity="secondary" value="Sambuche dopo il pasto: ora non dichiarata"></p-tag>
+      <p-tag *ngIf="prominentDate" icon="pi pi-clock" severity="secondary" value="Superalcolici: orario da confermare"></p-tag>
       <p-tag icon="pi pi-info-circle" severity="secondary" value="Non segnalato ≠ assente"></p-tag>
     </div>
     <p-message *ngIf="!hasData" severity="secondary" text="Nessun giorno registrato nell’intervallo scelto. Non equivale a digiuno o assenza di alcol."></p-message>
@@ -66,13 +66,13 @@
       <p-card styleClass="nutrition-chart-card">
         <div class="nutrition-chart-title"><div><span>03 · ENERGIA</span><h3>Calorie registrate</h3><p>Totali giornalieri, quando disponibili nel diario.</p></div><p-tag severity="secondary" value="kcal"></p-tag></div>
         <div class="nutrition-plot"><p-chart type="bar" [data]="calorieData" [options]="calorieOptions"></p-chart></div>
-        <div class="nut-caption">Il 14/11 è un totale incompleto: calorie delle sambuche non quantificate. Altri giorni possono avere pasti non registrati.</div>
+        <div class="nut-caption">Le calorie degli alcolici con dose ignota non sono incluse: alcuni totali sono necessariamente parziali. Altri pasti potrebbero non essere registrati.</div>
       </p-card>
 
       <p-card styleClass="nutrition-chart-card">
         <div class="nutrition-chart-title"><div><span>04 · ESPOSIZIONE</span><h3>Alcol puro stimato</h3><p>Il registro bevande evita doppi conteggi calorici.</p></div><p-tag severity="warn" value="Dose incompleta in alcuni giorni"></p-tag></div>
         <div class="nutrition-plot"><p-chart type="bar" [data]="alcoholData" [options]="alcoholOptions"></p-chart></div>
-        <div class="nut-caption">Una barra arancione rappresenta solo la dose nota: per il 14/11 le sambuche non sono quantificabili. Nessuna barra ≠ astinenza.</div>
+        <div class="nut-caption">Una barra arancione rappresenta soltanto la dose nota: eventuali alcolici senza quantità non vengono stimati. Nessuna barra ≠ astinenza.</div>
       </p-card>
 
       <p-card styleClass="nutrition-chart-card">

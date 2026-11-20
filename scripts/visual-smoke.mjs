@@ -22,9 +22,9 @@ app.get('/api/dashboard',(req,res)=>{
  res.json(data);
 });
 const nutrition={days:[
- {date:'2026-11-14',kcal:1459,protein:63,carbs:115,fat:78,healthy:0,nonHealthy:1,healthyUnconfirmed:1,mealCount:1,
+ {date:'2026-11-12',kcal:1459,protein:63,carbs:115,fat:78,healthy:0,nonHealthy:1,healthyUnconfirmed:1,mealCount:1,
    alcoholStatus:'confirmed',alcoholGrams:13.5,alcoholIncomplete:true,alcoholCount:2,spirits:true,
-   lossOfControl:true,daytimeConfirmed:false,warning:'',drinks:['Peroni','Sambuca — dose ignota']},
+   lossOfControl:true,daytimeConfirmed:false,warning:'',drinks:['Bevanda sintetica','Distillato fittizio — dose ignota']},
  {date:'2026-12-01',kcal:2550,protein:152,carbs:243,fat:72,healthy:2,nonHealthy:1,healthyUnconfirmed:0,mealCount:3,
    alcoholStatus:'unreported',alcoholGrams:null,alcoholIncomplete:false,alcoholCount:0,spirits:false,
    lossOfControl:false,daytimeConfirmed:false,warning:'',drinks:[]},
@@ -132,7 +132,7 @@ async function suite(label,viewport){
  await page.locator('.date-input input[type="date"]').first().fill('2026-11-20');
  await page.locator('.date-input input[type="date"]').first().dispatchEvent('change');
  await page.locator('.nutrition-focus h3').waitFor({timeout:10000});
- check((await page.locator('.nutrition-focus').innerText()).includes('14 novembre'),label+' missing-quantity Sambuca flagged as user-reported critical event');
+ check((await page.locator('.nutrition-focus').innerText()).includes('12/11'),label+' event from synthetic data flagged, without hardcoded private details');
  const nutritionOverflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  check(nutritionOverflow<=3,label+' Nutrition no horizontal overflow');
  await page.screenshot({path:'test-artifacts/'+label+'-nutrition.png',fullPage:true});
